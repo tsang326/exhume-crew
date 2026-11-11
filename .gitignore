@@ -1,0 +1,9 @@
+node_modules
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+# Do NOT ignore /.kiro (hackathon rules require it).
+# ui/dist IS committed (Crew runs it at install).
+demo-library/exhumed/
