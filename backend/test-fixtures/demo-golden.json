@@ -1,0 +1,118 @@
+[
+  {
+    "diskId": "288224c2e646e929410b6a3ff66cdaed9d52907d0e44fa5e55e3366ab128d158",
+    "relPath": "damaged-disk.img",
+    "label": "DAMAGE DEMO",
+    "sizeBytes": 368640,
+    "geometry": {
+      "source": "fallback",
+      "label": "360K"
+    },
+    "fileCount": 3,
+    "totalEntries": 3,
+    "entriesTruncated": false,
+    "dateFirst": "1992-09-15T13:24:40",
+    "dateLast": "1992-09-17T08:00:00",
+    "formats": [
+      "markdown",
+      "text"
+    ],
+    "counts": {
+      "alive": 2,
+      "recovered": 0,
+      "partial": 1,
+      "lost": 0
+    },
+    "warnings": [
+      {
+        "code": "bpb-invalid",
+        "message": "boot sector parameters are invalid; using standard geometry for image size"
+      },
+      {
+        "code": "chain-cycle",
+        "message": "cluster chain revisits cluster 2",
+        "path": "/LETTER.WS"
+      }
+    ],
+    "status": "catalogued"
+  },
+  {
+    "diskId": "b32b99efca106fecf1f361358d3187a35b1475ca9bfe12526f985bb7295d291a",
+    "relPath": "fd13-720k-dsk01.img",
+    "label": "FD13DSK01",
+    "sizeBytes": 737280,
+    "geometry": {
+      "source": "bpb",
+      "label": "720K"
+    },
+    "fileCount": 13,
+    "totalEntries": 13,
+    "entriesTruncated": false,
+    "dateFirst": "2022-02-20T12:43:42",
+    "dateLast": "2022-02-20T12:48:10",
+    "formats": [],
+    "counts": {
+      "alive": 12,
+      "recovered": 1,
+      "partial": 0,
+      "lost": 0
+    },
+    "warnings": [],
+    "status": "catalogued"
+  },
+  {
+    "diskId": "0ff7c54033495e42d814b1aebb1297dbc2228684fc35245d33ca7c2039c32971",
+    "relPath": "office-disk.img",
+    "label": "OFFICE DEMO",
+    "sizeBytes": 737280,
+    "geometry": {
+      "source": "bpb",
+      "label": "720K"
+    },
+    "fileCount": 5,
+    "totalEntries": 6,
+    "entriesTruncated": false,
+    "dateFirst": "1990-11-19T14:07:08",
+    "dateLast": "1991-06-30T08:00:00",
+    "formats": [
+      "csv",
+      "png",
+      "text"
+    ],
+    "counts": {
+      "alive": 5,
+      "recovered": 0,
+      "partial": 0,
+      "lost": 1
+    },
+    "warnings": [],
+    "status": "catalogued"
+  },
+  {
+    "diskId": "877a6c69532bd39e1f2f8847f6c86c4d91c5308bfb2debdb5aa218dd6a2b9306",
+    "relPath": "writers-disk.img",
+    "label": "WRITER DEMO",
+    "sizeBytes": 368640,
+    "geometry": {
+      "source": "bpb",
+      "label": "360K"
+    },
+    "fileCount": 6,
+    "totalEntries": 6,
+    "entriesTruncated": false,
+    "dateFirst": "1989-02-27T22:05:36",
+    "dateLast": "1989-05-10T08:00:00",
+    "formats": [
+      "markdown",
+      "text"
+    ],
+    "counts": {
+      "alive": 4,
+      "recovered": 1,
+      "partial": 1,
+      "lost": 0
+    },
+    "warnings": [],
+    "status": "catalogued"
+  }
+]

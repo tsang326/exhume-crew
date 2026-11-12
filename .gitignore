@@ -6,4 +6,5 @@ node_modules
 *.log
 # Do NOT ignore /.kiro (hackathon rules require it).
 # ui/dist IS committed (Crew runs it at install).
-demo-library/exhumed/
+**/exhumed/
+/data/
