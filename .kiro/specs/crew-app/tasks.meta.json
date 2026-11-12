@@ -1520,6 +1520,47 @@
         "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
         "timestamp": 1794454090230
       }
+    ],
+    "20.1 Polish the UI: clamped summaries, graveyard look, header, collapsible settings": [
+      {
+        "executionId": "ce73fa90-766b-488f-85f3-12cc333b838d",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794454503227
+      },
+      {
+        "executionId": "ce73fa90-766b-488f-85f3-12cc333b838d",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794454508271
+      },
+      {
+        "executionId": "ce73fa90-766b-488f-85f3-12cc333b838d",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794455217608
+      }
+    ],
+    "20.2 Rebuild and run all checks": [
+      {
+        "executionId": "ce73fa90-766b-488f-85f3-12cc333b838d",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794454503492
+      },
+      {
+        "executionId": "ce73fa90-766b-488f-85f3-12cc333b838d",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794455223406
+      },
+      {
+        "executionId": "ce73fa90-766b-488f-85f3-12cc333b838d",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794455406604
+      }
+    ],
+    "20. UI polish (owner feedback after task 19; do not commit)": [
+      {
+        "executionId": "ce73fa90-766b-488f-85f3-12cc333b838d",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794455406693
+      }
     ]
   }
 }

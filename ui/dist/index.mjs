@@ -398,10 +398,14 @@ function PreviewPane({ api, diskId, entry }) {
 // ui/src/DiskView.tsx
 import { jsx, jsxs } from "react/jsx-runtime";
 var EXHUME_ALL_TOOLTIP = "Exhumes live files and deleted entries graded recovered.";
+function stoneHeight(index) {
+  return Math.abs(index) % 4;
+}
 function Grave({
   entry,
   selected,
-  onSelect
+  onSelect,
+  index = 0
 }) {
   const deleted = entry.state !== "alive";
   const isFile = entry.kind === "file";
@@ -413,7 +417,15 @@ function Grave({
       "data-testid": deleted ? "open-grave" : "tombstone",
       "data-selected": selected ? "true" : "false",
       children: [
-        /* @__PURE__ */ jsx("span", { className: "ec-grave-mark", "aria-hidden": "true" }),
+        /* @__PURE__ */ jsx(
+          "span",
+          {
+            className: "ec-grave-mark",
+            "aria-hidden": "true",
+            "data-shape": deleted ? "pit" : "stone",
+            "data-h": deleted ? void 0 : String(stoneHeight(index))
+          }
+        ),
         isFile ? /* @__PURE__ */ jsxs(
           "button",
           {
@@ -446,7 +458,7 @@ function Graveyard({
   selected,
   onSelect
 }) {
-  return /* @__PURE__ */ jsx("ul", { className: "ec-graveyard", "aria-label": "Graveyard", "data-testid": "graveyard", children: files.map((f) => /* @__PURE__ */ jsx(Grave, { entry: f, selected: selected === f.id, onSelect }, f.id)) });
+  return /* @__PURE__ */ jsx("ul", { className: "ec-graveyard", "aria-label": "Graveyard", "data-testid": "graveyard", children: files.map((f, i) => /* @__PURE__ */ jsx(Grave, { entry: f, index: i, selected: selected === f.id, onSelect }, f.id)) });
 }
 function NotFound({ onBack }) {
   return /* @__PURE__ */ jsxs("div", { className: "ec-content", "data-testid": "disk-not-found", children: [
@@ -565,12 +577,53 @@ function buildUndertakerMessage(id) {
 }
 
 // ui/src/LibraryView.tsx
-import { jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
+import { Fragment, jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
 var GENERIC_SAVE_ERROR = "The library folder could not be set.";
 var MAX_ERROR_TEXT = 300;
 function errorText(err, fallback) {
   if (err instanceof Error && err.message.trim() !== "") return err.message.slice(0, MAX_ERROR_TEXT);
   return fallback;
+}
+function Header() {
+  return /* @__PURE__ */ jsxs2("header", { className: "ec-header", "data-testid": "app-header", children: [
+    /* @__PURE__ */ jsx2("span", { className: "ec-header-lantern", "aria-hidden": "true" }),
+    /* @__PURE__ */ jsxs2("div", { children: [
+      /* @__PURE__ */ jsx2("h1", { className: "ec-title", children: "Exhume Crew" }),
+      /* @__PURE__ */ jsx2("p", { className: "ec-subtitle", children: "A crew for a box of old floppy disks" })
+    ] })
+  ] });
+}
+function needsClamp(text, lines) {
+  const newlines = text.split("\n").length - 1;
+  return text.length > lines * 55 || newlines >= lines * 2;
+}
+function ClampText(props) {
+  const { text, lines, testId, className, expandLabel, collapseLabel } = props;
+  const [expanded, setExpanded] = useState3(false);
+  const long = needsClamp(text, lines);
+  const clamped = long && !expanded;
+  return /* @__PURE__ */ jsxs2(Fragment, { children: [
+    /* @__PURE__ */ jsx2(
+      "p",
+      {
+        className: `ec-clamp${className ? ` ${className}` : ""}`,
+        "data-testid": testId,
+        "data-lines": String(lines),
+        "data-clamped": clamped ? "true" : "false",
+        children: text
+      }
+    ),
+    long ? /* @__PURE__ */ jsx2(
+      "button",
+      {
+        className: "ec-btn ec-toggle",
+        type: "button",
+        "aria-expanded": expanded,
+        onClick: () => setExpanded((v) => !v),
+        children: expanded ? collapseLabel : expandLabel
+      }
+    ) : null
+  ] });
 }
 function SettingsArea(props) {
   const { library, disabled, saveError, demoError, onSave, onUseDemo } = props;
@@ -579,40 +632,55 @@ function SettingsArea(props) {
   useEffect3(() => {
     setPath(shownPath);
   }, [shownPath]);
+  const [userOpen, setUserOpen] = useState3(null);
+  const usable = library !== null && library.path !== null && library.error === null;
+  const open = userOpen ?? (library !== null && !usable);
   return /* @__PURE__ */ jsxs2("section", { className: "ec-card", "aria-label": "Settings", "data-testid": "settings-area", children: [
-    /* @__PURE__ */ jsx2("h2", { children: "Library folder" }),
-    /* @__PURE__ */ jsxs2(
-      "form",
+    /* @__PURE__ */ jsx2("h2", { className: "ec-settings-title", children: /* @__PURE__ */ jsx2(
+      "button",
       {
-        className: "ec-row",
-        onSubmit: (e) => {
-          e.preventDefault();
-          onSave(path);
-        },
-        children: [
-          /* @__PURE__ */ jsx2("label", { htmlFor: "ec-library-path", children: "Library path" }),
-          /* @__PURE__ */ jsx2(
-            "input",
-            {
-              id: "ec-library-path",
-              className: "ec-input",
-              type: "text",
-              value: path,
-              onChange: (e) => setPath(e.target.value)
-            }
-          ),
-          /* @__PURE__ */ jsx2("button", { className: "ec-btn", type: "submit", disabled: disabled || path.trim() === "", children: "Save" }),
-          /* @__PURE__ */ jsx2("button", { className: "ec-btn", type: "button", disabled, onClick: onUseDemo, children: "Use demo library" })
-        ]
+        className: "ec-btn ec-settings-toggle",
+        type: "button",
+        "aria-expanded": open,
+        "aria-controls": "ec-settings-body",
+        onClick: () => setUserOpen(!open),
+        children: "Library folder"
       }
-    ),
-    /* @__PURE__ */ jsxs2("p", { className: "ec-muted", children: [
-      "Current library: ",
-      /* @__PURE__ */ jsx2("span", { "data-testid": "library-path", children: library?.path ?? "not set" })
-    ] }),
-    library?.error ? /* @__PURE__ */ jsx2("p", { role: "alert", className: "ec-error", "data-testid": "library-error", children: library.error.message }) : null,
-    saveError ? /* @__PURE__ */ jsx2("p", { role: "alert", className: "ec-error", children: saveError }) : null,
-    demoError ? /* @__PURE__ */ jsx2("p", { role: "alert", className: "ec-error", children: demoError }) : null
+    ) }),
+    /* @__PURE__ */ jsxs2("div", { id: "ec-settings-body", hidden: !open, "data-testid": "settings-body", children: [
+      /* @__PURE__ */ jsxs2(
+        "form",
+        {
+          className: "ec-row",
+          onSubmit: (e) => {
+            e.preventDefault();
+            onSave(path);
+          },
+          children: [
+            /* @__PURE__ */ jsx2("label", { htmlFor: "ec-library-path", children: "Library path" }),
+            /* @__PURE__ */ jsx2(
+              "input",
+              {
+                id: "ec-library-path",
+                className: "ec-input",
+                type: "text",
+                value: path,
+                onChange: (e) => setPath(e.target.value)
+              }
+            ),
+            /* @__PURE__ */ jsx2("button", { className: "ec-btn", type: "submit", disabled: disabled || path.trim() === "", children: "Save" }),
+            /* @__PURE__ */ jsx2("button", { className: "ec-btn", type: "button", disabled, onClick: onUseDemo, children: "Use demo library" })
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsxs2("p", { className: "ec-muted", children: [
+        "Current library: ",
+        /* @__PURE__ */ jsx2("span", { "data-testid": "library-path", children: library?.path ?? "not set" })
+      ] }),
+      library?.error ? /* @__PURE__ */ jsx2("p", { role: "alert", className: "ec-error", "data-testid": "library-error", children: library.error.message }) : null,
+      saveError ? /* @__PURE__ */ jsx2("p", { role: "alert", className: "ec-error", children: saveError }) : null,
+      demoError ? /* @__PURE__ */ jsx2("p", { role: "alert", className: "ec-error", children: demoError }) : null
+    ] })
   ] });
 }
 function Toolbar(props) {
@@ -649,8 +717,25 @@ function DiskCard({ card, onOpen }) {
     /* @__PURE__ */ jsx2("p", { children: /* @__PURE__ */ jsx2("span", { className: "ec-badge", "data-testid": "card-status", children: card.status }) }),
     /* @__PURE__ */ jsx2("p", { "data-testid": "card-counts", children: `Recovered ${card.counts.recovered}, partial ${card.counts.partial}, lost ${card.counts.lost}` }),
     /* @__PURE__ */ jsx2("p", { "data-testid": "card-warnings", children: `Warnings: ${card.warnings.length}` }),
-    /* @__PURE__ */ jsx2("p", { "data-testid": "card-summary", className: card.summary ? void 0 : "ec-muted", children: card.summary ? card.summary.text : "No summary yet" }),
-    card.notes.length > 0 ? /* @__PURE__ */ jsx2("ul", { "data-testid": "card-notes", children: card.notes.map((n) => /* @__PURE__ */ jsx2("li", { children: n.text }, n.id)) }) : /* @__PURE__ */ jsx2("p", { "data-testid": "card-notes", className: "ec-muted", children: "No notes yet" })
+    card.summary ? /* @__PURE__ */ jsx2(
+      ClampText,
+      {
+        text: card.summary.text,
+        lines: 4,
+        testId: "card-summary",
+        expandLabel: "Show full summary",
+        collapseLabel: "Show less"
+      }
+    ) : /* @__PURE__ */ jsx2("p", { "data-testid": "card-summary", className: "ec-muted", children: "No summary yet" }),
+    card.notes.length > 0 ? /* @__PURE__ */ jsx2("ul", { "data-testid": "card-notes", children: card.notes.map((n) => /* @__PURE__ */ jsx2("li", { children: /* @__PURE__ */ jsx2(
+      ClampText,
+      {
+        text: n.text,
+        lines: 2,
+        expandLabel: "Show full note",
+        collapseLabel: "Show less"
+      }
+    ) }, n.id)) }) : /* @__PURE__ */ jsx2("p", { "data-testid": "card-notes", className: "ec-muted", children: "No notes yet" })
   ] });
 }
 function Shelf({ disks, onOpen }) {
@@ -776,7 +861,7 @@ function LibraryView({ api, onOpenDisk, onSummarise }) {
   };
   const hasDisks = disks !== null && disks.length > 0;
   return /* @__PURE__ */ jsxs2("div", { className: "ec-content", "data-testid": "library-view", children: [
-    /* @__PURE__ */ jsx2("h1", { children: "Exhume Crew" }),
+    /* @__PURE__ */ jsx2(Header, {}),
     /* @__PURE__ */ jsx2(
       SettingsArea,
       {
@@ -917,7 +1002,31 @@ var STYLE_TEXT = `
 .ec-grave { position: relative; display: flex; border: 1px solid currentColor; border-radius: 22px 22px 4px 4px; overflow-wrap: anywhere; background: color-mix(in srgb, currentColor 6%, transparent); }
 .ec-grave[data-testid="open-grave"] { border-style: dashed; border-radius: 4px 4px 22px 22px; background: color-mix(in srgb, currentColor 14%, transparent); box-shadow: inset 0 -8px 10px -6px color-mix(in srgb, currentColor 35%, transparent); }
 .ec-grave[data-selected="true"] { border-width: 3px; }
-.ec-grave-mark { flex: none; width: 10px; margin: 8px 0 8px 12px; border-top: 2px solid currentColor; border-left: 2px solid currentColor; border-right: 2px solid currentColor; border-radius: 6px 6px 0 0; opacity: 0.6; }
+.ec-grave-mark { flex: none; align-self: flex-end; width: 22px; margin: 0 0 8px 12px; box-sizing: border-box; border: 2px solid currentColor; opacity: 0.7; }
+.ec-grave-mark[data-shape="stone"] { border-radius: 11px 11px 2px 2px; background: color-mix(in srgb, currentColor 22%, transparent); }
+.ec-grave-mark[data-shape="pit"] { width: 26px; border-radius: 2px 2px 13px 13px; border-style: dashed; background: #1f2937; height: 14px; }
+.ec-grave-mark[data-h="0"] { height: 26px; }
+.ec-grave-mark[data-h="1"] { height: 32px; }
+.ec-grave-mark[data-h="2"] { height: 38px; }
+.ec-grave-mark[data-h="3"] { height: 30px; }
+.ec-grave .ec-badge[data-grade] { background: #1f2937; color: #f9fafb; border-color: #1f2937; box-shadow: 0 0 0 1px #9ca3af; padding: 1px 10px; }
+.ec-header { display: flex; align-items: center; gap: 12px; }
+.ec-header-lantern { flex: none; position: relative; display: block; width: 16px; height: 26px; margin: 6px 6px 6px 4px; border-radius: 4px; background: #ffb347; box-shadow: 0 0 12px 2px rgba(255, 179, 71, 0.45); }
+.ec-header-lantern::before { content: ""; position: absolute; left: -2px; right: -2px; top: -5px; height: 4px; border-radius: 2px; background: #6b7280; }
+.ec-header-lantern::after { content: ""; position: absolute; left: -2px; right: -2px; bottom: -5px; height: 4px; border-radius: 2px; background: #6b7280; }
+.ec-title { margin: 0; font-size: 1.5em; line-height: 1.2; }
+.ec-subtitle { margin: 2px 0 0 0; opacity: 0.8; }
+.ec-settings-title { margin: 0; font-size: 1em; }
+.ec-settings-toggle { font-weight: 600; }
+.ec-settings-toggle::before { content: "\\25B8  "; }
+.ec-settings-toggle[aria-expanded="true"]::before { content: "\\25BE  "; }
+#ec-settings-body { margin-top: 8px; }
+#ec-settings-body[hidden] { display: none; }
+.ec-clamp { margin: 6px 0 4px 0; white-space: pre-wrap; }
+.ec-clamp[data-clamped="true"] { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+.ec-clamp[data-clamped="true"][data-lines="4"] { -webkit-line-clamp: 4; line-clamp: 4; }
+.ec-clamp[data-clamped="true"][data-lines="2"] { -webkit-line-clamp: 2; line-clamp: 2; }
+.ec-toggle { padding: 0 8px; font-size: 0.85em; margin-bottom: 4px; }
 .ec-grave-btn { display: block; flex: 1 1 auto; width: 100%; min-width: 0; text-align: left; background: transparent; border: 0; border-radius: inherit; color: inherit; font: inherit; cursor: pointer; padding: 8px 12px; }
 .ec-grave-btn:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
 .ec-grave-static { flex: 1 1 auto; padding: 8px 12px; }

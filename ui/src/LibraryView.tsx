@@ -16,6 +16,67 @@ function errorText(err: unknown, fallback: string): string {
   return fallback;
 }
 
+// ------------------------------------------------------------------ Header
+
+/** Small title area: lantern, title and a one-line subtitle. The lantern is decoration only. */
+export function Header(): ReactElement {
+  return (
+    <header className="ec-header" data-testid="app-header">
+      <span className="ec-header-lantern" aria-hidden="true" />
+      <div>
+        <h1 className="ec-title">Exhume Crew</h1>
+        <p className="ec-subtitle">A crew for a box of old floppy disks</p>
+      </div>
+    </header>
+  );
+}
+
+// ------------------------------------------------------------------ ClampText
+
+/** Deterministic "long enough to need a toggle" rule: no layout is measured. */
+export function needsClamp(text: string, lines: number): boolean {
+  const newlines = text.split("\n").length - 1;
+  // Newlines weigh less than wrapped text: only many explicit line breaks count as long.
+  return text.length > lines * 55 || newlines >= lines * 2;
+}
+
+/** Text clamped to `lines` lines with a real expand button, shown only for long text. */
+export function ClampText(props: {
+  text: string;
+  lines: number;
+  testId?: string;
+  className?: string;
+  expandLabel: string;
+  collapseLabel: string;
+}): ReactElement {
+  const { text, lines, testId, className, expandLabel, collapseLabel } = props;
+  const [expanded, setExpanded] = useState(false);
+  const long = needsClamp(text, lines);
+  const clamped = long && !expanded;
+  return (
+    <>
+      <p
+        className={`ec-clamp${className ? ` ${className}` : ""}`}
+        data-testid={testId}
+        data-lines={String(lines)}
+        data-clamped={clamped ? "true" : "false"}
+      >
+        {text}
+      </p>
+      {long ? (
+        <button
+          className="ec-btn ec-toggle"
+          type="button"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((v) => !v)}
+        >
+          {expanded ? collapseLabel : expandLabel}
+        </button>
+      ) : null}
+    </>
+  );
+}
+
 // ------------------------------------------------------------------ SettingsArea
 
 export interface SettingsAreaProps {
@@ -35,9 +96,25 @@ export function SettingsArea(props: SettingsAreaProps): ReactElement {
     setPath(shownPath);
   }, [shownPath]);
 
+  // Open only while no library is usable, unless the user has toggled it.
+  const [userOpen, setUserOpen] = useState<boolean | null>(null);
+  const usable = library !== null && library.path !== null && library.error === null;
+  const open = userOpen ?? (library !== null && !usable);
+
   return (
     <section className="ec-card" aria-label="Settings" data-testid="settings-area">
-      <h2>Library folder</h2>
+      <h2 className="ec-settings-title">
+        <button
+          className="ec-btn ec-settings-toggle"
+          type="button"
+          aria-expanded={open}
+          aria-controls="ec-settings-body"
+          onClick={() => setUserOpen(!open)}
+        >
+          Library folder
+        </button>
+      </h2>
+      <div id="ec-settings-body" hidden={!open} data-testid="settings-body">
       <form
         className="ec-row"
         onSubmit={(e) => {
@@ -78,6 +155,7 @@ export function SettingsArea(props: SettingsAreaProps): ReactElement {
           {demoError}
         </p>
       ) : null}
+      </div>
     </section>
   );
 }
@@ -172,13 +250,30 @@ export function DiskCard({ card, onOpen }: { card: DiskCardView; onOpen: (id: st
         {`Recovered ${card.counts.recovered}, partial ${card.counts.partial}, lost ${card.counts.lost}`}
       </p>
       <p data-testid="card-warnings">{`Warnings: ${card.warnings.length}`}</p>
-      <p data-testid="card-summary" className={card.summary ? undefined : "ec-muted"}>
-        {card.summary ? card.summary.text : "No summary yet"}
-      </p>
+      {card.summary ? (
+        <ClampText
+          text={card.summary.text}
+          lines={4}
+          testId="card-summary"
+          expandLabel="Show full summary"
+          collapseLabel="Show less"
+        />
+      ) : (
+        <p data-testid="card-summary" className="ec-muted">
+          No summary yet
+        </p>
+      )}
       {card.notes.length > 0 ? (
         <ul data-testid="card-notes">
           {card.notes.map((n) => (
-            <li key={n.id}>{n.text}</li>
+            <li key={n.id}>
+              <ClampText
+                text={n.text}
+                lines={2}
+                expandLabel="Show full note"
+                collapseLabel="Show less"
+              />
+            </li>
           ))}
         </ul>
       ) : (
@@ -352,7 +447,7 @@ export function LibraryView({ api, onOpenDisk, onSummarise }: LibraryViewProps):
 
   return (
     <div className="ec-content" data-testid="library-view">
-      <h1>Exhume Crew</h1>
+      <Header />
       <SettingsArea
         library={library}
         disabled={busy}

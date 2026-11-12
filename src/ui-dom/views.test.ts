@@ -233,6 +233,71 @@ describe("Library error", () => {
   });
 });
 
+describe("Shelf clamp", () => {
+  const longText = "word ".repeat(120).trim();
+
+  it("shows a Show full summary toggle only for long summaries and flips aria-expanded", async () => {
+    const long = { ...card(ID_A, true), summary: { text: longText, savedAt: "2024-01-01T00:00:00.000Z", agent: "exhume-archivist" as const } };
+    const api = fakeApi({ listDisks: () => Promise.resolve({ disks: [long, card(ID_B, true)] }) });
+    await mount(library(api));
+    const cards = Array.from(container.querySelectorAll<HTMLElement>('[data-testid="disk-card"]'));
+    expect(cards[1]?.querySelector(".ec-toggle")).toBeNull();
+    const first = cards[0] as HTMLElement;
+    const text = first.querySelector<HTMLElement>('[data-testid="card-summary"]') as HTMLElement;
+    expect(text.getAttribute("data-clamped")).toBe("true");
+    const toggle = first.querySelector<HTMLButtonElement>(".ec-toggle") as HTMLButtonElement;
+    expect(toggle.textContent).toBe("Show full summary");
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    await click(toggle);
+    expect(toggle.textContent).toBe("Show less");
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    expect(text.getAttribute("data-clamped")).toBe("false");
+    expect(text.textContent).toBe(longText);
+  });
+
+  it("clamps long notes at two lines", async () => {
+    const c = {
+      ...card(ID_A, false),
+      notes: [
+        { id: "n1", text: "short", savedAt: "2024-01-01T00:00:00.000Z", agent: "exhume-undertaker" as const },
+        { id: "n2", text: "a\nb\nc\nd\ne", savedAt: "2024-01-01T00:00:00.000Z", agent: "exhume-undertaker" as const },
+      ],
+    };
+    await mount(library(fakeApi({ listDisks: () => Promise.resolve({ disks: [c] }) })));
+    const toggles = container.querySelectorAll(".ec-toggle");
+    expect(toggles.length).toBe(1);
+    expect(toggles[0]?.textContent).toBe("Show full note");
+  });
+});
+
+describe("Header and settings", () => {
+  it("shows the title, subtitle and a decorative lantern", async () => {
+    await mount(library(fakeApi()));
+    expect(q("h1")?.textContent).toBe("Exhume Crew");
+    expect(q(".ec-subtitle")?.textContent).toBe("A crew for a box of old floppy disks");
+    expect(q(".ec-header-lantern")?.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  it("keeps settings collapsed for a usable library and lets the user toggle", async () => {
+    await mount(library(fakeApi()));
+    const toggle = button("Library folder");
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(q("#ec-settings-body")?.hidden).toBe(true);
+    await click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    expect(q("#ec-settings-body")?.hidden).toBe(false);
+  });
+
+  it("opens settings when no library is usable", async () => {
+    const api = fakeApi({
+      getLibrary: () => Promise.resolve({ path: "/gone", error: { code: "x", message: "missing" } }),
+    });
+    await mount(library(api));
+    expect(button("Library folder").getAttribute("aria-expanded")).toBe("true");
+    expect(q("#ec-settings-body")?.hidden).toBe(false);
+  });
+});
+
 describe("Grave row", () => {
   it("makes the whole row a real button holding the name and the grade", async () => {
     const api = fakeApi({

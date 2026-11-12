@@ -23,14 +23,21 @@ type ExhumeState =
   | { phase: "error" }
   | { phase: "done"; results: ExhumeOutcome[] };
 
+/** Deterministic stone height step (0 to 3) from the entry index; CSS maps it to 26, 32, 38, 30 px. */
+export function stoneHeight(index: number): number {
+  return Math.abs(index) % 4;
+}
+
 export function Grave({
   entry,
   selected,
   onSelect,
+  index = 0,
 }: {
   entry: FileEntry;
   selected: boolean;
   onSelect: (id: number) => void;
+  index?: number;
 }): ReactElement {
   const deleted = entry.state !== "alive";
   const isFile = entry.kind === "file";
@@ -41,7 +48,12 @@ export function Grave({
       data-testid={deleted ? "open-grave" : "tombstone"}
       data-selected={selected ? "true" : "false"}
     >
-      <span className="ec-grave-mark" aria-hidden="true" />
+      <span
+        className="ec-grave-mark"
+        aria-hidden="true"
+        data-shape={deleted ? "pit" : "stone"}
+        data-h={deleted ? undefined : String(stoneHeight(index))}
+      />
       {isFile ? (
         <button
           className="ec-grave-btn"
@@ -84,8 +96,8 @@ export function Graveyard({
 }): ReactElement {
   return (
     <ul className="ec-graveyard" aria-label="Graveyard" data-testid="graveyard">
-      {files.map((f) => (
-        <Grave key={f.id} entry={f} selected={selected === f.id} onSelect={onSelect} />
+      {files.map((f, i) => (
+        <Grave key={f.id} entry={f} index={i} selected={selected === f.id} onSelect={onSelect} />
       ))}
     </ul>
   );

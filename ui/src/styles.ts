@@ -29,7 +29,31 @@ export const STYLE_TEXT = `
 .ec-grave { position: relative; display: flex; border: 1px solid currentColor; border-radius: 22px 22px 4px 4px; overflow-wrap: anywhere; background: color-mix(in srgb, currentColor 6%, transparent); }
 .ec-grave[data-testid="open-grave"] { border-style: dashed; border-radius: 4px 4px 22px 22px; background: color-mix(in srgb, currentColor 14%, transparent); box-shadow: inset 0 -8px 10px -6px color-mix(in srgb, currentColor 35%, transparent); }
 .ec-grave[data-selected="true"] { border-width: 3px; }
-.ec-grave-mark { flex: none; width: 10px; margin: 8px 0 8px 12px; border-top: 2px solid currentColor; border-left: 2px solid currentColor; border-right: 2px solid currentColor; border-radius: 6px 6px 0 0; opacity: 0.6; }
+.ec-grave-mark { flex: none; align-self: flex-end; width: 22px; margin: 0 0 8px 12px; box-sizing: border-box; border: 2px solid currentColor; opacity: 0.7; }
+.ec-grave-mark[data-shape="stone"] { border-radius: 11px 11px 2px 2px; background: color-mix(in srgb, currentColor 22%, transparent); }
+.ec-grave-mark[data-shape="pit"] { width: 26px; border-radius: 2px 2px 13px 13px; border-style: dashed; background: #1f2937; height: 14px; }
+.ec-grave-mark[data-h="0"] { height: 26px; }
+.ec-grave-mark[data-h="1"] { height: 32px; }
+.ec-grave-mark[data-h="2"] { height: 38px; }
+.ec-grave-mark[data-h="3"] { height: 30px; }
+.ec-grave .ec-badge[data-grade] { background: #1f2937; color: #f9fafb; border-color: #1f2937; box-shadow: 0 0 0 1px #9ca3af; padding: 1px 10px; }
+.ec-header { display: flex; align-items: center; gap: 12px; }
+.ec-header-lantern { flex: none; position: relative; display: block; width: 16px; height: 26px; margin: 6px 6px 6px 4px; border-radius: 4px; background: #ffb347; box-shadow: 0 0 12px 2px rgba(255, 179, 71, 0.45); }
+.ec-header-lantern::before { content: ""; position: absolute; left: -2px; right: -2px; top: -5px; height: 4px; border-radius: 2px; background: #6b7280; }
+.ec-header-lantern::after { content: ""; position: absolute; left: -2px; right: -2px; bottom: -5px; height: 4px; border-radius: 2px; background: #6b7280; }
+.ec-title { margin: 0; font-size: 1.5em; line-height: 1.2; }
+.ec-subtitle { margin: 2px 0 0 0; opacity: 0.8; }
+.ec-settings-title { margin: 0; font-size: 1em; }
+.ec-settings-toggle { font-weight: 600; }
+.ec-settings-toggle::before { content: "\\25B8  "; }
+.ec-settings-toggle[aria-expanded="true"]::before { content: "\\25BE  "; }
+#ec-settings-body { margin-top: 8px; }
+#ec-settings-body[hidden] { display: none; }
+.ec-clamp { margin: 6px 0 4px 0; white-space: pre-wrap; }
+.ec-clamp[data-clamped="true"] { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+.ec-clamp[data-clamped="true"][data-lines="4"] { -webkit-line-clamp: 4; line-clamp: 4; }
+.ec-clamp[data-clamped="true"][data-lines="2"] { -webkit-line-clamp: 2; line-clamp: 2; }
+.ec-toggle { padding: 0 8px; font-size: 0.85em; margin-bottom: 4px; }
 .ec-grave-btn { display: block; flex: 1 1 auto; width: 100%; min-width: 0; text-align: left; background: transparent; border: 0; border-radius: inherit; color: inherit; font: inherit; cursor: pointer; padding: 8px 12px; }
 .ec-grave-btn:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
 .ec-grave-static { flex: 1 1 auto; padding: 8px 12px; }

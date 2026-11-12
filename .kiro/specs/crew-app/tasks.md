@@ -367,6 +367,21 @@ Standing constraints for every task:
     - Run `npm run build`, then `vitest --run`, `tsc --noEmit`, lint and `npm run check-build`; fix failures minimally without weakening tests; confirm `mcp/exhume-mcp.mjs` and `mcp/PINNED.md` are unchanged; do not commit; leave task 18 alone
     - _Requirements: 19.13, 20.2, 20.3, 20.4_
 
+- [x] 20. UI polish (owner feedback after task 19; do not commit)
+  - [x] 20.1 Polish the UI: clamped summaries, graveyard look, header, collapsible settings
+    - Edit only `ui/src/**` and UI tests in `src/ui-dom/**`
+    - Shelf cards: show the Summary clamped to about 4 lines with a real button "Show full summary" / "Show less" (`aria-expanded`) so cards stay a similar height; Notes the same way when longer than 2 lines
+    - Disk view: graves read as a graveyard at a glance; tombstones get a rounded-top stone shape drawn in CSS/SVG beside or behind the file name with slightly varied heights; open graves get a darker dug-out shape with the grade badge on it; rows stay readable, the whole row is still the button, focus ring unchanged
+    - Header: a small title area "Exhume Crew" with a one-line subtitle (for example "A crew for a box of old floppy disks") and the lantern next to it; move Library folder settings into a collapsible section that is open only when no library is usable
+    - Light mode: check every new shape and colour against a light background; text contrast at least 4.5:1, decorative shapes may be faint
+    - Keep every rule: React text children only, exactly one style element, no network, no image files, animations only inside `prefers-reduced-motion: no-preference`, decorative layers `aria-hidden`, no `any`
+    - Add or update DOM tests for the clamp toggle and the collapsible settings
+    - _Requirements: 13.1-13.10, 14.1-14.13, 15.1-15.7_
+
+  - [x] 20.2 Rebuild and run all checks
+    - Run `npm run build`, then `vitest --run`, `tsc --noEmit`, lint and `npm run check-build`; fix failures minimally without weakening tests; confirm `mcp/exhume-mcp.mjs` and `mcp/PINNED.md` are unchanged; do not commit; leave task 18 alone
+    - _Requirements: 19.13, 20.2, 20.3, 20.4_
+
 ## Notes
 
 - All property-based test sub-tasks are required. `docs/SPEC_BRIEFS.md` only says "Property tests where they fit (store round-trip, CSV export parses back)" and gives no permission to make any of them optional.
@@ -389,7 +404,9 @@ Standing constraints for every task:
     { "id": 8, "tasks": ["13.3", "14.1"] },
     { "id": 9, "tasks": ["16.1", "16.2"] },
     { "id": 10, "tasks": ["19.1", "19.2"] },
-    { "id": 11, "tasks": ["19.3"] }
+    { "id": 11, "tasks": ["19.3"] },
+    { "id": 12, "tasks": ["20.1"] },
+    { "id": 13, "tasks": ["20.2"] }
   ]
 }
 ```
