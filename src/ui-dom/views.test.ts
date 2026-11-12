@@ -195,6 +195,69 @@ describe("Library view", () => {
   });
 });
 
+describe("Library error", () => {
+  it("clears a stale library error after the demo library is copied", async () => {
+    let calls = 0;
+    const api = fakeApi({
+      getLibrary: () => {
+        calls++;
+        return Promise.resolve(
+          calls === 1
+            ? { path: "/gone", error: { code: "x", message: "That folder was not found." } }
+            : { path: "/demo", error: null },
+        );
+      },
+      copyDemoLibrary: () => Promise.resolve({} as never),
+    });
+    await mount(library(api));
+    expect(q('[data-testid="library-error"]')?.textContent).toBe("That folder was not found.");
+    await click(button("Use demo library"));
+    expect(q('[data-testid="library-error"]')).toBeNull();
+    expect(q('[data-testid="library-path"]')?.textContent).toBe("/demo");
+  });
+
+  it("clears the library error even if the later status cannot be read", async () => {
+    let calls = 0;
+    const api = fakeApi({
+      getLibrary: () => {
+        calls++;
+        return calls === 1
+          ? Promise.resolve({ path: "/gone", error: { code: "x", message: "That folder was not found." } })
+          : Promise.reject(new Error("down"));
+      },
+      copyDemoLibrary: () => Promise.resolve({} as never),
+    });
+    await mount(library(api));
+    await click(button("Use demo library"));
+    expect(q('[data-testid="library-error"]')).toBeNull();
+  });
+});
+
+describe("Grave row", () => {
+  it("makes the whole row a real button holding the name and the grade", async () => {
+    const api = fakeApi({
+      listDisks: () => Promise.resolve({ disks: [card(ID_A, false)] }),
+      getDisk: () => Promise.resolve(detail()),
+      getPreview: () => Promise.reject(new Error("nope")),
+    });
+    await mount(diskView(api));
+    const rows = Array.from(container.querySelectorAll<HTMLElement>('[data-testid="graveyard"] > li'));
+    expect(rows.length).toBe(2);
+    for (const row of rows) {
+      const btn = row.querySelector("button");
+      expect(btn).not.toBeNull();
+      expect(row.querySelectorAll("button").length).toBe(1);
+      expect(btn?.textContent).toContain(row.querySelector(".ec-grave-name")?.textContent ?? "?");
+    }
+    const grave = rows[1] as HTMLElement;
+    expect(grave.querySelector("button")?.contains(grave.querySelector('[data-testid="grave-grade"]'))).toBe(true);
+    // Clicking the grade text (not the file name) selects the row.
+    await click(grave.querySelector<HTMLElement>(".ec-badge") as HTMLElement);
+    expect(grave.getAttribute("data-selected")).toBe("true");
+    expect(STYLE_TEXT).toMatch(/\.ec-grave-btn\s*\{[^}]*width: 100%/);
+  });
+});
+
 describe("Disk view", () => {
   it("shows the not-found view for an unknown disk", async () => {
     const api = fakeApi({ listDisks: () => Promise.resolve({ disks: [card(ID_B, false)] }) });

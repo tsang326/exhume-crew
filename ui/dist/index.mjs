@@ -29,6 +29,12 @@ function DecorLayer() {
       ),
       createElement(
         "g",
+        { className: "ec-stones", fill: "#6b7280", fillOpacity: 0.12 },
+        createElement("path", { d: "M30 300 V250 a16 16 0 0 1 32 0 V300 Z" }),
+        createElement("path", { d: "M70 300 V262 a12 12 0 0 1 24 0 V300 Z" })
+      ),
+      createElement(
+        "g",
         { className: "ec-lantern" },
         createElement("circle", { className: "ec-lantern-glow", cx: 350, cy: 50, r: 60, fill: "url(#ec-lantern-grad)" }),
         createElement("rect", { x: 343, y: 38, width: 14, height: 24, rx: 3, fill: "#ffb347", fillOpacity: 0.35 }),
@@ -407,7 +413,8 @@ function Grave({
       "data-testid": deleted ? "open-grave" : "tombstone",
       "data-selected": selected ? "true" : "false",
       children: [
-        isFile ? /* @__PURE__ */ jsx(
+        /* @__PURE__ */ jsx("span", { className: "ec-grave-mark", "aria-hidden": "true" }),
+        isFile ? /* @__PURE__ */ jsxs(
           "button",
           {
             className: "ec-grave-btn",
@@ -415,13 +422,21 @@ function Grave({
             "aria-pressed": selected,
             "aria-label": label,
             onClick: () => onSelect(entry.id),
-            children: entry.path
+            children: [
+              /* @__PURE__ */ jsx("span", { className: "ec-grave-name", children: entry.path }),
+              deleted ? /* @__PURE__ */ jsxs("span", { className: "ec-grave-grade", "data-testid": "grave-grade", children: [
+                /* @__PURE__ */ jsx("span", { className: "ec-badge", "data-grade": entry.state, children: `Grade: ${entry.state}` }),
+                entry.reason !== void 0 ? /* @__PURE__ */ jsx("span", { children: ` ${entry.reason}` }) : null
+              ] }) : null
+            ]
           }
-        ) : /* @__PURE__ */ jsx("span", { children: entry.path }),
-        deleted ? /* @__PURE__ */ jsxs("div", { "data-testid": "grave-grade", children: [
-          /* @__PURE__ */ jsx("span", { className: "ec-badge", children: `Grade: ${entry.state}` }),
-          entry.reason !== void 0 ? /* @__PURE__ */ jsx("span", { children: ` ${entry.reason}` }) : null
-        ] }) : null
+        ) : /* @__PURE__ */ jsxs("div", { className: "ec-grave-static", children: [
+          /* @__PURE__ */ jsx("span", { className: "ec-grave-name", children: entry.path }),
+          deleted ? /* @__PURE__ */ jsxs("span", { className: "ec-grave-grade", "data-testid": "grave-grade", children: [
+            /* @__PURE__ */ jsx("span", { className: "ec-badge", "data-grade": entry.state, children: `Grade: ${entry.state}` }),
+            entry.reason !== void 0 ? /* @__PURE__ */ jsx("span", { children: ` ${entry.reason}` }) : null
+          ] }) : null
+        ] })
       ]
     }
   );
@@ -628,8 +643,9 @@ function EmptyState({ disabled, onUseDemo }) {
   ] });
 }
 function DiskCard({ card, onOpen }) {
-  return /* @__PURE__ */ jsxs2("li", { className: "ec-card", "data-testid": "disk-card", children: [
-    /* @__PURE__ */ jsx2("h3", { children: /* @__PURE__ */ jsx2("button", { className: "ec-btn", type: "button", onClick: () => onOpen(card.diskId), children: card.label === "" ? "Untitled disk" : card.label }) }),
+  return /* @__PURE__ */ jsxs2("li", { className: "ec-card ec-disk", "data-testid": "disk-card", children: [
+    /* @__PURE__ */ jsx2("span", { className: "ec-disk-shutter", "aria-hidden": "true" }),
+    /* @__PURE__ */ jsx2("h3", { className: "ec-disk-label", children: /* @__PURE__ */ jsx2("button", { className: "ec-btn", type: "button", onClick: () => onOpen(card.diskId), children: card.label === "" ? "Untitled disk" : card.label }) }),
     /* @__PURE__ */ jsx2("p", { children: /* @__PURE__ */ jsx2("span", { className: "ec-badge", "data-testid": "card-status", children: card.status }) }),
     /* @__PURE__ */ jsx2("p", { "data-testid": "card-counts", children: `Recovered ${card.counts.recovered}, partial ${card.counts.partial}, lost ${card.counts.lost}` }),
     /* @__PURE__ */ jsx2("p", { "data-testid": "card-warnings", children: `Warnings: ${card.warnings.length}` }),
@@ -712,7 +728,7 @@ function LibraryView({ api, onOpenDisk, onSummarise }) {
     api.setLibrary(path).then(
       async (l) => {
         if (!live.current) return;
-        setLibrary(l);
+        setLibrary({ ...l, error: null });
         setBusy(false);
         await refreshScan();
         await refreshDisks();
@@ -728,6 +744,12 @@ function LibraryView({ api, onOpenDisk, onSummarise }) {
     setDemoError(null);
     setBusy(true);
     api.copyDemoLibrary().then(async () => {
+      if (live.current) setLibrary((prev) => prev === null ? prev : { ...prev, error: null });
+      try {
+        const fresh = await api.getLibrary();
+        if (live.current && fresh.path !== null && fresh.error === null) setLibrary(fresh);
+      } catch {
+      }
       await startScan();
       await refreshDisks();
     }).catch(() => {
@@ -880,16 +902,27 @@ var STYLE_TEXT = `
 .ec-decor { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
 .ec-decor svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .ec-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.ec-shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; list-style: none; margin: 0; padding: 0; }
-.ec-card { border: 1px solid currentColor; border-radius: 8px; padding: 12px; background: transparent; overflow-wrap: anywhere; }
+.ec-shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px 16px; list-style: none; margin: 0; padding: 0; }
+.ec-card { border: 1px solid currentColor; border-radius: 8px; padding: 12px; background: color-mix(in srgb, currentColor 5%, transparent); overflow-wrap: anywhere; }
+.ec-disk { position: relative; border-radius: 4px 14px 4px 4px; padding: 12px 12px 16px 12px; margin-bottom: 10px; border-width: 2px; }
+.ec-disk::before { content: ""; position: absolute; top: 0; right: 0; width: 14px; height: 14px; border-left: 2px solid currentColor; border-bottom: 2px solid currentColor; border-radius: 0 12px 0 6px; background: color-mix(in srgb, currentColor 14%, transparent); }
+.ec-disk::after { content: ""; position: absolute; left: -6px; right: -6px; bottom: -10px; height: 6px; border-radius: 2px; background: color-mix(in srgb, currentColor 22%, transparent); border-top: 1px solid currentColor; }
+.ec-disk-shutter { display: block; width: 46%; height: 14px; margin: -4px 0 8px 18px; border: 1px solid currentColor; border-radius: 0 0 4px 4px; background: color-mix(in srgb, currentColor 16%, transparent); }
+.ec-disk-label { padding: 4px 6px; border: 1px dashed currentColor; border-radius: 3px; background: color-mix(in srgb, currentColor 8%, transparent); }
 .ec-card h3, .ec-card h2 { margin: 0 0 6px 0; }
 .ec-badge { display: inline-block; border: 1px solid currentColor; border-radius: 999px; padding: 0 8px; font-size: 0.8em; }
 .ec-muted { opacity: 0.75; }
 .ec-error { border-left: 4px solid currentColor; padding-left: 8px; font-weight: 600; }
 .ec-graveyard { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.ec-grave { border: 1px solid currentColor; border-radius: 6px; padding: 6px 8px; overflow-wrap: anywhere; }
+.ec-grave { position: relative; display: flex; border: 1px solid currentColor; border-radius: 22px 22px 4px 4px; overflow-wrap: anywhere; background: color-mix(in srgb, currentColor 6%, transparent); }
+.ec-grave[data-testid="open-grave"] { border-style: dashed; border-radius: 4px 4px 22px 22px; background: color-mix(in srgb, currentColor 14%, transparent); box-shadow: inset 0 -8px 10px -6px color-mix(in srgb, currentColor 35%, transparent); }
 .ec-grave[data-selected="true"] { border-width: 3px; }
-.ec-grave-btn { text-align: left; background: transparent; border: 0; color: inherit; font: inherit; cursor: pointer; padding: 0; }
+.ec-grave-mark { flex: none; width: 10px; margin: 8px 0 8px 12px; border-top: 2px solid currentColor; border-left: 2px solid currentColor; border-right: 2px solid currentColor; border-radius: 6px 6px 0 0; opacity: 0.6; }
+.ec-grave-btn { display: block; flex: 1 1 auto; width: 100%; min-width: 0; text-align: left; background: transparent; border: 0; border-radius: inherit; color: inherit; font: inherit; cursor: pointer; padding: 8px 12px; }
+.ec-grave-btn:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+.ec-grave-static { flex: 1 1 auto; padding: 8px 12px; }
+.ec-grave-name { display: block; }
+.ec-grave-grade { display: block; margin-top: 2px; }
 .ec-preview { border: 1px solid currentColor; border-radius: 8px; padding: 12px; overflow: auto; max-height: 60vh; overflow-wrap: anywhere; }
 .ec-preview pre { white-space: pre-wrap; margin: 0; }
 .ec-table { border-collapse: collapse; }
@@ -902,6 +935,8 @@ var STYLE_TEXT = `
 @media (prefers-reduced-motion: no-preference) {
   @keyframes ec-flicker { 0% { opacity: 0.85; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
   @keyframes ec-drift { 0% { transform: translateX(-3%); } 100% { transform: translateX(3%); } }
+  @keyframes ec-rise { 0% { opacity: 0; transform: translateY(4px); } 100% { opacity: 1; transform: none; } }
+  .ec-grave, .ec-disk { animation: ec-rise 0.35s ease-out both; }
   .ec-lantern-glow { animation: ec-flicker 2.4s ease-in-out infinite alternate; }
   .ec-fog { animation: ec-drift 18s ease-in-out infinite alternate; }
 }

@@ -75,6 +75,9 @@ and `design_tweak`. No app was installed or run, and no sandbox behaviour was te
 followed. The rule used: the installed 0.12.1 source wins over the docs, because the app runs on that build and
 `minKiroCrewVersion` pins it.
 
+Crew requires the owner to trust a third-party app before it can be enabled. Enabling from the CLI is refused by
+policy; the dashboard shows a trust prompt instead. (Read from docs and source, not yet verified by hand.)
+
 Nothing is listed under "Verified by hand" yet. Per Requirement 21.2, every Crew behaviour in this README is under
 exactly one of the headings "Verified by hand" or "Assumed". Behaviours that were only read from docs or source
 are shown below under their own heading and are not claimed as run in Crew.

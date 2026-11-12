@@ -1462,6 +1462,64 @@
         "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
         "timestamp": 1794422895893
       }
+    ],
+    "19.1 Fix the UI: grave row click target, stale library error, Exhume look": [
+      {
+        "executionId": "2d0793fb-a657-43c9-83c7-0d699070938f",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794453031552
+      },
+      {
+        "executionId": "2d0793fb-a657-43c9-83c7-0d699070938f",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794453041329
+      },
+      {
+        "executionId": "2d0793fb-a657-43c9-83c7-0d699070938f",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794453171728
+      }
+    ],
+    "19.2 Fix prompts, skill, sanitiser and README": [
+      {
+        "executionId": "2d0793fb-a657-43c9-83c7-0d699070938f",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794453036529
+      },
+      {
+        "executionId": "2d0793fb-a657-43c9-83c7-0d699070938f",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794453042114
+      },
+      {
+        "executionId": "2d0793fb-a657-43c9-83c7-0d699070938f",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794453172550
+      }
+    ],
+    "19.3 Rebuild and run all checks": [
+      {
+        "executionId": "2d0793fb-a657-43c9-83c7-0d699070938f",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794453036826
+      },
+      {
+        "executionId": "2d0793fb-a657-43c9-83c7-0d699070938f",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794453176819
+      },
+      {
+        "executionId": "2d0793fb-a657-43c9-83c7-0d699070938f",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794454090144
+      }
+    ],
+    "19. Post-install fixes (owner feedback after the Crew 0.12.1 demo run; do not commit)": [
+      {
+        "executionId": "2d0793fb-a657-43c9-83c7-0d699070938f",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794454090230
+      }
     ]
   }
 }

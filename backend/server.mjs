@@ -1334,7 +1334,7 @@ function isControl(cp) {
   return cp <= 31 || cp >= 127 && cp <= 159;
 }
 function isInvisibleFormat(cp) {
-  return cp === 8232 || cp === 8233 || cp >= 8234 && cp <= 8238 || cp >= 8294 && cp <= 8297 || cp === 65279;
+  return cp >= 8203 && cp <= 8205 || cp === 8288 || cp === 8232 || cp === 8233 || cp >= 8234 && cp <= 8238 || cp >= 8294 && cp <= 8297 || cp === 65279;
 }
 function filterCodePoints(text, drop) {
   let out = "";

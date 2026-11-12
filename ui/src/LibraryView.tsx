@@ -156,8 +156,9 @@ export function EmptyState({ disabled, onUseDemo }: { disabled: boolean; onUseDe
 
 export function DiskCard({ card, onOpen }: { card: DiskCardView; onOpen: (id: string) => void }): ReactElement {
   return (
-    <li className="ec-card" data-testid="disk-card">
-      <h3>
+    <li className="ec-card ec-disk" data-testid="disk-card">
+      <span className="ec-disk-shutter" aria-hidden="true" />
+      <h3 className="ec-disk-label">
         <button className="ec-btn" type="button" onClick={() => onOpen(card.diskId)}>
           {card.label === "" ? "Untitled disk" : card.label}
         </button>
@@ -291,7 +292,7 @@ export function LibraryView({ api, onOpenDisk, onSummarise }: LibraryViewProps):
     api.setLibrary(path).then(
       async (l) => {
         if (!live.current) return;
-        setLibrary(l);
+        setLibrary({ ...l, error: null });
         setBusy(false);
         await refreshScan();
         await refreshDisks();
@@ -310,6 +311,14 @@ export function LibraryView({ api, onOpenDisk, onSummarise }: LibraryViewProps):
     api
       .copyDemoLibrary()
       .then(async () => {
+        if (live.current) setLibrary((prev) => (prev === null ? prev : { ...prev, error: null }));
+        try {
+          const fresh = await api.getLibrary();
+          // A valid later status replaces the old one, which drops any stale error.
+          if (live.current && fresh.path !== null && fresh.error === null) setLibrary(fresh);
+        } catch {
+          // Keep the cleared status.
+        }
         await startScan();
         await refreshDisks();
       })

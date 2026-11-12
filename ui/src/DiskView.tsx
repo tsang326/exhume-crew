@@ -41,6 +41,7 @@ export function Grave({
       data-testid={deleted ? "open-grave" : "tombstone"}
       data-selected={selected ? "true" : "false"}
     >
+      <span className="ec-grave-mark" aria-hidden="true" />
       {isFile ? (
         <button
           className="ec-grave-btn"
@@ -49,17 +50,25 @@ export function Grave({
           aria-label={label}
           onClick={() => onSelect(entry.id)}
         >
-          {entry.path}
+          <span className="ec-grave-name">{entry.path}</span>
+          {deleted ? (
+            <span className="ec-grave-grade" data-testid="grave-grade">
+              <span className="ec-badge" data-grade={entry.state}>{`Grade: ${entry.state}`}</span>
+              {entry.reason !== undefined ? <span>{` ${entry.reason}`}</span> : null}
+            </span>
+          ) : null}
         </button>
       ) : (
-        <span>{entry.path}</span>
-      )}
-      {deleted ? (
-        <div data-testid="grave-grade">
-          <span className="ec-badge">{`Grade: ${entry.state}`}</span>
-          {entry.reason !== undefined ? <span>{` ${entry.reason}`}</span> : null}
+        <div className="ec-grave-static">
+          <span className="ec-grave-name">{entry.path}</span>
+          {deleted ? (
+            <span className="ec-grave-grade" data-testid="grave-grade">
+              <span className="ec-badge" data-grade={entry.state}>{`Grade: ${entry.state}`}</span>
+              {entry.reason !== undefined ? <span>{` ${entry.reason}`}</span> : null}
+            </span>
+          ) : null}
         </div>
-      ) : null}
+      )}
     </li>
   );
 }

@@ -35,9 +35,11 @@ function isControl(cp: number): boolean {
   return cp <= 0x1f || (cp >= 0x7f && cp <= 0x9f);
 }
 
-/** Line/paragraph separators, bidi embedding/override/isolate controls and the BOM. */
+/** Zero-width chars, line/paragraph separators, bidi embedding/override/isolate controls and the BOM. */
 function isInvisibleFormat(cp: number): boolean {
   return (
+    (cp >= 0x200b && cp <= 0x200d) ||
+    cp === 0x2060 ||
     cp === 0x2028 ||
     cp === 0x2029 ||
     (cp >= 0x202a && cp <= 0x202e) ||

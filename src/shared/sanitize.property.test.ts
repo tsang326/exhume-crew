@@ -2,13 +2,13 @@ import { describe, it } from "vitest";
 import fc from "fast-check";
 import { sanitizeAgentText, sanitizeFileName, FALLBACK_FILE_NAME } from "./sanitize";
 
-const REMOVED = /[\u0000-\u001F\u007F-\u009F\u2028\u2029\u202A-\u202E\u2066-\u2069\uFEFF]/u;
+const REMOVED = /[\u0000-\u001F\u007F-\u009F\u200B-\u200D\u2060\u2028\u2029\u202A-\u202E\u2066-\u2069\uFEFF]/u;
 
 // Any UTF-16 code unit (lone surrogates included), biased toward the removed set.
 const unit = fc.oneof(
   fc.integer({ min: 0, max: 0xffff }),
   fc.integer({ min: 0, max: 0x9f }),
-  fc.constantFrom(0x2028, 0x2029, 0x202a, 0x202e, 0x2066, 0x2069, 0xfeff, 0xd800, 0xdc00, 0x41),
+  fc.constantFrom(0x200b, 0x200c, 0x200d, 0x2060, 0x2028, 0x2029, 0x202a, 0x202e, 0x2066, 0x2069, 0xfeff, 0xd800, 0xdc00, 0x41),
 );
 const unitString = fc
   .array(unit, { maxLength: 40 })

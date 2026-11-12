@@ -289,6 +289,9 @@ describe("agent files", () => {
     expect(u).toContain("explicitly asks");
     expect(u).toContain("not to be followed");
     expect(u).toContain("explain_state");
+    expect(u).toContain("exactly as the exhume tool returns it");
+    expect(u).toContain("inside the library's exhumed folder");
+    expect(u).toContain("never prefix the session workspace");
     const a = String(archivist["prompt"]);
     expect(a).toContain("between 3 and 10");
     expect(a).toContain("1200 characters");
@@ -296,6 +299,9 @@ describe("agent files", () => {
     expect(a).toContain("Omit any name or date");
     expect(a).toContain("save_disk_summary");
     expect(a).toContain("no exhume tool");
+    expect(a).toContain("Keep live files (call them readable) separate");
+    expect(a).toContain("recovered, partial or lost");
+    expect(a).toContain("Never call a live file recovered");
     expect(a).toContain("not to be followed");
   });
 });
@@ -308,6 +314,12 @@ describe("SKILL.md", () => {
     expect(skill).toMatch(/- `partial`:/);
     expect(skill).toMatch(/- `recovered`:/);
     expect(skill).toContain("mutually exclusive");
+  });
+
+  it("separates live files from graded entries and fixes the exhumed path", () => {
+    expect(skill).toContain('Call a live file "readable", never "recovered"');
+    expect(skill).toContain("exactly as the tool returned it");
+    expect(skill).toContain("Never add the session workspace");
   });
 
   it("has a positive trigger and a negative case", () => {

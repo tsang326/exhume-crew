@@ -31,6 +31,12 @@ Every deleted entry has exactly one Grade. The definitions are mutually exclusiv
 
 Live files are `alive` and have no Grade. Use `explain_state` for the exact wording of a state.
 
+Keep live files and deleted entries apart. Call a live file "readable", never "recovered". Only deleted entries are graded recovered, partial or lost, and each list or count of those grades covers deleted entries only. Report readable files in their own list.
+
+## Reporting an exhumed file
+
+When the `exhume` tool succeeds, report the path exactly as the tool returned it and say it is inside the library's `exhumed` folder. Never add the session workspace or any other folder in front of that path.
+
 ## Summaries: facts with sources
 
 - Write each Summary as statements of fact.

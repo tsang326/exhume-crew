@@ -345,6 +345,28 @@ Standing constraints for every task:
   - Record in one commit: for each behaviour that passed, move it from "Assumed" to "Verified by hand" in the README with the date and method, and move the same item from Assumptions to Verified in `design.md` (Requirement 21.9); leave failed items under "Assumed" with a note
   - _Requirements: 1.8, 1.9, 21.2, 21.3, 21.5, 21.8, 21.9_
 
+- [x] 19. Post-install fixes (owner feedback after the Crew 0.12.1 demo run; do not commit)
+  - [x] 19.1 Fix the UI: grave row click target, stale library error, Exhume look
+    - Edit only `ui/src/**` and UI tests in `src/ui-dom/**`
+    - Disk view: make the whole grave row the click target (the button fills the row, keyboard focus unchanged, still a real button with the focus-visible outline)
+    - Library view: clear the library error whenever a later library status is valid, and after a successful Use demo library or set path
+    - Look: live files as tombstones, deleted entries as open graves with the grade shown on the grave, lantern and fog, translucent, drawn in code (inline SVG/CSS, no image files), lighter than the Exhume web page, readable in light and dark, animations only inside `prefers-reduced-motion: no-preference`; shelf cards feel like disks on a shelf
+    - Keep every security rule: React text children only, exactly one style element, no network, no innerHTML-family APIs, no `any`, decorative layers `aria-hidden`
+    - Add tests for the whole-row click and the cleared error
+    - _Requirements: 3.10, 13.1-13.10, 14.1-14.13, 15.1-15.7_
+
+  - [x] 19.2 Fix prompts, skill, sanitiser and README
+    - Undertaker prompt (and skill if needed): report the exhumed path exactly as the `exhume` tool returns it, described as inside the library's `exhumed` folder; never prefix the session workspace or any other folder
+    - Archivist prompt and skill: keep live files ("readable") separate from the three grades of deleted entries (recovered / partial / lost); never call a live file "recovered"
+    - `sanitizeAgentText` also strips U+200B, U+200C, U+200D and U+2060; update Property 25 and any affected tests
+    - README: short note that Crew requires the owner to trust a third-party app before enabling it (CLI enable is refused by policy; the dashboard shows a trust prompt); move nothing to "Verified by hand"
+    - Update manifest and agent file tests for the new prompt phrases
+    - _Requirements: 9.6, 9.8, 10.1-10.10, 11.1-11.8, 12.1-12.6, 16.5, 21.2_
+
+  - [x] 19.3 Rebuild and run all checks
+    - Run `npm run build`, then `vitest --run`, `tsc --noEmit`, lint and `npm run check-build`; fix failures minimally without weakening tests; confirm `mcp/exhume-mcp.mjs` and `mcp/PINNED.md` are unchanged; do not commit; leave task 18 alone
+    - _Requirements: 19.13, 20.2, 20.3, 20.4_
+
 ## Notes
 
 - All property-based test sub-tasks are required. `docs/SPEC_BRIEFS.md` only says "Property tests where they fit (store round-trip, CSV export parses back)" and gives no permission to make any of them optional.
@@ -365,7 +387,9 @@ Standing constraints for every task:
     { "id": 6, "tasks": ["7.4", "7.5", "7.6", "7.9", "9.1", "12.6", "12.7"] },
     { "id": 7, "tasks": ["9.2", "9.3", "9.4", "9.5", "13.2", "15.1"] },
     { "id": 8, "tasks": ["13.3", "14.1"] },
-    { "id": 9, "tasks": ["16.1", "16.2"] }
+    { "id": 9, "tasks": ["16.1", "16.2"] },
+    { "id": 10, "tasks": ["19.1", "19.2"] },
+    { "id": 11, "tasks": ["19.3"] }
   ]
 }
 ```
