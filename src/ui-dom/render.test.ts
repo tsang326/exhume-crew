@@ -3,7 +3,7 @@ import fc from "fast-check";
 import { createElement } from "react";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { describe, it } from "vitest";
+import { afterAll, describe, it } from "vitest";
 import type { DiskCardView, FileEntry } from "../shared/schema";
 import type { DiskDetail, ExhumeApi, PreviewResponse } from "../../ui/src/lib/api";
 import { LibraryView } from "../../ui/src/LibraryView";
@@ -14,6 +14,25 @@ import { DiskView } from "../../ui/src/DiskView";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+// happy-dom has no layout: mock every collapsed clamped paragraph as clipped so the toggles render.
+const clientHeightDesc = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "clientHeight");
+const scrollHeightDesc = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollHeight");
+Object.defineProperty(HTMLElement.prototype, "clientHeight", {
+  configurable: true,
+  get(this: HTMLElement) {
+    return this.classList.contains("ec-clamp") ? 40 : 0;
+  },
+});
+Object.defineProperty(HTMLElement.prototype, "scrollHeight", {
+  configurable: true,
+  get(this: HTMLElement) {
+    return this.classList.contains("ec-clamp") && this.getAttribute("data-clamped") === "true" ? 120 : 0;
+  },
+});
+afterAll(() => {
+  if (clientHeightDesc) Object.defineProperty(HTMLElement.prototype, "clientHeight", clientHeightDesc);
+  if (scrollHeightDesc) Object.defineProperty(HTMLElement.prototype, "scrollHeight", scrollHeightDesc);
+});
 const DISK_ID = "a".repeat(64);
 const NEUTRAL = "x";
 
@@ -40,7 +59,7 @@ const hostile = fc
   .map((parts) => "<" + parts.join(""));
 
 const FORBIDDEN_TAGS = new Set([
-  "script", "img", "a", "iframe", "svg", "style", "object", "embed", "link", "meta", "b", "i", "u", "video", "audio",
+  "script", "img", "a", "iframe", "style", "object", "embed", "link", "meta", "b", "i", "u", "video", "audio",
 ]);
 
 interface Texts {
@@ -121,10 +140,26 @@ function allElements(root: Element): Element[] {
   return [root, ...Array.from(root.querySelectorAll("*"))];
 }
 
+// Fixed decoration (the header lantern) is the only SVG allowed: it must be aria-hidden, carry the
+// lantern marker and use only these drawing tags. Text-built svg would add elements or change the count.
+const LANTERN_TAGS = new Set(["svg", "defs", "radialgradient", "stop", "g", "rect", "circle", "path"]);
+
+function svgCount(root: Element): number {
+  return allElements(root).filter((el) => el.tagName.toLowerCase() === "svg").length;
+}
+
+function svgIsDecorOnly(el: Element): boolean {
+  const tag = el.tagName.toLowerCase();
+  if (!LANTERN_TAGS.has(tag)) return false;
+  if (tag !== "svg") return true;
+  return el.getAttribute("aria-hidden") === "true" && el.getAttribute("data-testid") === "lantern";
+}
+
 function hasNoInjectedMarkup(root: Element): boolean {
   return allElements(root).every(
     (el) =>
       !FORBIDDEN_TAGS.has(el.tagName.toLowerCase()) &&
+      (el.closest("svg") === null || svgIsDecorOnly(el)) &&
       el.getAttributeNames().every((n) => !n.startsWith("on") && n !== "style" && n !== "href" && n !== "src"),
   );
 }
@@ -184,6 +219,7 @@ describe("Feature: crew-app, Property 32: Untrusted text renders literally", () 
   it("Library view shows card text literally and builds no elements from it", async () => {
     const baseline = await renderLibrary(neutral);
     const baseSig = signature(baseline);
+    const baseSvgs = svgCount(baseline);
     await dispose(baseline);
     const ok = await fc.assert(
       fc.asyncProperty(texts, async (t) => {
@@ -200,6 +236,7 @@ describe("Feature: crew-app, Property 32: Untrusted text renders literally", () 
           const sameShape = signature(c).length > 0 && (notes.length !== 2 || signature(c) === baseSig);
           return (
             hasNoInjectedMarkup(c) &&
+            svgCount(c) === baseSvgs &&
             sameShape &&
             (card.querySelector("h3")?.textContent ?? "") === t.label &&
             card.querySelector("button[aria-label]")?.textContent === "Open disk" &&
@@ -223,6 +260,7 @@ describe("Feature: crew-app, Property 32: Untrusted text renders literally", () 
   it("Disk view and text previews show file names, reasons and preview text literally", async () => {
     const base = await renderDisk(neutral, previewOf("text", NEUTRAL, NEUTRAL));
     const baseSig = signature(base);
+    const baseSvgs = svgCount(base);
     await dispose(base);
     await fc.assert(
       fc.asyncProperty(texts, async (t) => {
@@ -233,6 +271,7 @@ describe("Feature: crew-app, Property 32: Untrusted text renders literally", () 
           const graves = Array.from(c.querySelectorAll('[data-testid="tombstone"], [data-testid="open-grave"]'));
           return (
             hasNoInjectedMarkup(c) &&
+            svgCount(c) === baseSvgs &&
             signature(c) === baseSig &&
             pre !== null &&
             pre.textContent === t.preview &&

@@ -6,14 +6,14 @@
  */
 import { createElement, act, type ReactElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { DiskCardView, FileEntry, ScanStatus } from "../shared/schema";
 import type { DiskDetail, ExhumeApi, ExhumeOutcome, PreviewResponse } from "../../ui/src/lib/api";
 import { EXHUME_ALL_TOOLTIP, DiskView } from "../../ui/src/DiskView";
 import { LibraryView } from "../../ui/src/LibraryView";
 import { STYLE_TEXT } from "../../ui/src/styles";
 import { SUMMARISE_PREFIX } from "../../ui/src/lib/messages";
-import { conversionFor, formatBytes, formatDateRange } from "../../ui/src/lib/format";
+import { conversionFor, formatBytes, formatDateOnly, formatDateRange, formatDateTime } from "../../ui/src/lib/format";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -109,7 +109,32 @@ async function click(el: HTMLElement): Promise<void> {
   await flush();
 }
 
+// happy-dom has no layout: mock clipping. A collapsed clamped paragraph is clipped when `clipWhen` says so.
+const clientHeightDesc = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "clientHeight");
+const scrollHeightDesc = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollHeight");
+let clipWhen: (el: HTMLElement) => boolean = (el) => (el.textContent ?? "").length > 100 || (el.textContent ?? "").includes("\n");
+function isClampEl(el: HTMLElement): boolean {
+  return el.classList.contains("ec-clamp");
+}
+Object.defineProperty(HTMLElement.prototype, "clientHeight", {
+  configurable: true,
+  get(this: HTMLElement) {
+    return isClampEl(this) ? 40 : 0;
+  },
+});
+Object.defineProperty(HTMLElement.prototype, "scrollHeight", {
+  configurable: true,
+  get(this: HTMLElement) {
+    if (!isClampEl(this)) return 0;
+    return this.getAttribute("data-clamped") === "true" && clipWhen(this) ? 120 : 40;
+  },
+});
+afterAll(() => {
+  if (clientHeightDesc) Object.defineProperty(HTMLElement.prototype, "clientHeight", clientHeightDesc);
+  if (scrollHeightDesc) Object.defineProperty(HTMLElement.prototype, "scrollHeight", scrollHeightDesc);
+});
 beforeEach(() => {
+  clipWhen = (el) => (el.textContent ?? "").length > 100 || (el.textContent ?? "").includes("\n");
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -256,6 +281,44 @@ describe("Shelf clamp", () => {
     expect(text.textContent).toBe(longText);
   });
 
+  it("shows no toggle for long text that is not clipped, and keeps it while expanded", async () => {
+    const long = { ...card(ID_A, true), summary: { text: longText, savedAt: "2024-01-01T00:00:00.000Z", agent: "exhume-archivist" as const } };
+    const api = fakeApi({ listDisks: () => Promise.resolve({ disks: [long] }) });
+    clipWhen = () => false;
+    await mount(library(api));
+    expect(container.querySelector(".ec-toggle")).toBeNull();
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    clipWhen = () => true;
+    await mount(library(api));
+    await click(button("Show full summary"));
+    expect(container.querySelector(".ec-toggle")?.textContent).toBe("Show less");
+    await click(button("Show less"));
+    expect(container.querySelector(".ec-toggle")?.textContent).toBe("Show full summary");
+  });
+  it("shows no toggle when there is no layout (both heights 0)", async () => {
+    const long = { ...card(ID_A, true), summary: { text: longText, savedAt: "2024-01-01T00:00:00.000Z", agent: "exhume-archivist" as const } };
+    Object.defineProperty(HTMLElement.prototype, "clientHeight", { configurable: true, get: () => 0 });
+    Object.defineProperty(HTMLElement.prototype, "scrollHeight", { configurable: true, get: () => 0 });
+    try {
+      await mount(library(fakeApi({ listDisks: () => Promise.resolve({ disks: [long] }) })));
+      expect(container.querySelector(".ec-toggle")).toBeNull();
+    } finally {
+      Object.defineProperty(HTMLElement.prototype, "clientHeight", {
+        configurable: true,
+        get(this: HTMLElement) {
+          return isClampEl(this) ? 40 : 0;
+        },
+      });
+      Object.defineProperty(HTMLElement.prototype, "scrollHeight", {
+        configurable: true,
+        get(this: HTMLElement) {
+          if (!isClampEl(this)) return 0;
+          return this.getAttribute("data-clamped") === "true" && clipWhen(this) ? 120 : 40;
+        },
+      });
+    }
+  });
   it("clamps long notes at two lines", async () => {
     const c = {
       ...card(ID_A, false),
@@ -348,6 +411,14 @@ describe("Library cards and toolbar (task 22.4)", () => {
     expect(q('[data-testid="card-facts"]')?.textContent).toContain("no date");
   });
 
+  it("shows dates only on the card and mutes zero count badges", async () => {
+    await mountCards([rich({ dateFirst: "1990-11-19T14:07:08", dateLast: "1991-06-30T08:00:00", counts: { alive: 1, recovered: 2, partial: 0, lost: 0 } })]);
+    const facts = q('[data-testid="card-facts"]')?.textContent ?? "";
+    expect(facts).toContain("1990-11-19 to 1991-06-30");
+    expect(facts).not.toContain("T");
+    const b = Array.from(container.querySelectorAll('[data-testid="card-counts"] .ec-badge'));
+    expect(b.map((x) => x.getAttribute("data-muted"))).toEqual([null, "true", "true"]);
+  });
   it("makes Summarise primary, groups the exports and keeps Rescan secondary", async () => {
     await mountCards([rich()]);
     expect(button("Summarise new disks").classList.contains("ec-btn-primary")).toBe(true);
@@ -360,6 +431,8 @@ describe("Library cards and toolbar (task 22.4)", () => {
       expect(button(t).classList.contains("ec-btn-primary")).toBe(false);
     }
     expect(group.contains(button("Rescan"))).toBe(false);
+    expect(group.getAttribute("aria-label")).toBe("Export");
+    expect(STYLE_TEXT).not.toMatch(/\.ec-btn-group \{[^}]*border/);
     expect(STYLE_TEXT).toContain(".ec-btn-primary");
   });
 
@@ -570,7 +643,7 @@ describe("Disk page layout (22.3)", () => {
     };
   }
   const entries: FileEntry[] = [
-    { id: 1, path: "LETTER.WS", kind: "file", state: "alive", size: 2048, date: "1991-02-01" },
+    { id: 1, path: "LETTER.WS", kind: "file", state: "alive", size: 2048, date: "1991-02-01T16:45:00" },
     { id: 2, path: "DATA.DBF", kind: "file", state: "recovered", size: 10, date: null },
     { id: 3, path: "PIC.PCX", kind: "file", state: "partial", size: 10, date: null },
     { id: 4, path: "README.TXT", kind: "file", state: "alive", size: 10, date: null },
@@ -627,7 +700,7 @@ describe("Disk page layout (22.3)", () => {
     await open(richCard());
     const meta = (path: string): string =>
       q(`[data-testid="graveyard"] li [aria-label$="${path}"] [data-testid="grave-meta"]`)?.textContent ?? "";
-    expect(meta("LETTER.WS")).toBe("2 KB | 1991-02-01 | Converts: WordStar -> Markdown");
+    expect(meta("LETTER.WS")).toBe("2 KB | 1991-02-01 16:45 | Converts: WordStar -> Markdown");
     expect(meta("DATA.DBF")).toBe("10 B | no date | Converts: dBase -> CSV");
     expect(meta("PIC.PCX")).toBe("10 B | no date | Converts: PCX -> PNG");
     expect(meta("README.TXT")).toBe("10 B | no date | Converts: text");
@@ -687,6 +760,16 @@ describe("Disk page layout (22.3)", () => {
 });
 
 describe("Format helpers", () => {
+  it("formats dates, handling null and odd values", () => {
+    expect(formatDateRange("1990-11-19T14:07:08", "1991-06-30T08:00:00")).toBe("1990-11-19 to 1991-06-30");
+    expect(formatDateRange("1990-11-19T01:00:00", "1990-11-19T09:00:00")).toBe("1990-11-19");
+    expect(formatDateOnly("")).toBeNull();
+    expect(formatDateOnly("weird")).toBe("weird");
+    expect(formatDateTime("1991-06-28T16:45:10")).toBe("1991-06-28 16:45");
+    expect(formatDateTime("1991-06-28")).toBe("1991-06-28");
+    expect(formatDateTime(null)).toBeNull();
+    expect(formatDateTime("n/a")).toBe("n/a");
+  });
   it("formats sizes, ranges and conversions", () => {
     expect(formatBytes(0)).toBe("0 B");
     expect(formatBytes(1536)).toBe("1.5 KB");

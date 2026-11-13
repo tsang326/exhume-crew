@@ -7,8 +7,10 @@ import { useCallback, useState, type ReactElement } from "react";
 import { useAppApi, useChatLauncher, useTheme } from "@kirocrew/app-sdk";
 import { DecorLayer } from "./DecorLayer";
 import { DiskView } from "./DiskView";
+import { LightLayers } from "./LightLayers";
 import { LibraryView } from "./LibraryView";
 import { createApi } from "./lib/api";
+import { themeMode } from "./lib/theme";
 import { ARCHIVIST_AGENT, UNDERTAKER_AGENT, buildUndertakerMessage } from "./lib/messages";
 import { StyleElement } from "./styles";
 import { parseViewFromSearch, writeViewToUrl, type ViewState } from "./view-state";
@@ -27,10 +29,11 @@ export default function ExhumeCrewApp(): ReactElement {
 
   // Mode and accent come from useTheme(); the accent is exposed as data only. Colours use the
   // host's own CSS variables, so the bundle defines no theme value (Requirement 15.3).
+  const mode = themeMode(theme.mode);
   return (
     <div
       className="ec-root"
-      data-mode={theme.mode === "dark" ? "dark" : "light"}
+      data-mode={mode}
       data-accent={theme.accent}
     >
       <StyleElement />
@@ -46,6 +49,7 @@ export default function ExhumeCrewApp(): ReactElement {
         />
       ) : (
         <LibraryView
+          mode={mode}
           api={api}
           onOpenDisk={(id) => go({ kind: "disk", id })}
           onSummarise={(message) => {
@@ -53,6 +57,7 @@ export default function ExhumeCrewApp(): ReactElement {
           }}
         />
       )}
+      <LightLayers mode={mode} remeasureKey={view.kind} />
     </div>
   );
 }

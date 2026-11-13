@@ -3,10 +3,11 @@
  * (Requirements 3.10, 13.1 to 13.10). Untrusted text is only ever a React text child.
  * All network access goes through the injected `ExhumeApi`.
  */
-import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactElement } from "react";
 import type { DiskCardView, ScanStatus } from "../../src/shared/schema";
 import type { ExhumeApi, LibraryStatus } from "./lib/api";
 import { CountBadges } from "./Badges";
+import { Lantern } from "./Lantern";
 import { formatBytes, formatDateRange, formatFileCount } from "./lib/format";
 import { buildSummariseMessage, isValidDiskId } from "./lib/messages";
 
@@ -21,28 +22,30 @@ function errorText(err: unknown, fallback: string): string {
 // ------------------------------------------------------------------ Header
 
 /** Small title area: lantern, title and a one-line subtitle. The lantern is decoration only. */
-export function Header(): ReactElement {
+export function Header({ mode = "dark" }: { mode?: "dark" | "light" }): ReactElement {
   return (
     <header className="ec-header" data-testid="app-header">
-      <span className="ec-header-lantern" aria-hidden="true" />
       <div>
         <h1 className="ec-title">Exhume Crew</h1>
         <p className="ec-subtitle">A crew for a box of old floppy disks</p>
       </div>
+      <Lantern lit={mode === "dark"} />
     </header>
   );
 }
 
 // ------------------------------------------------------------------ ClampText
 
-/** Deterministic "long enough to need a toggle" rule: no layout is measured. */
-export function needsClamp(text: string, lines: number): boolean {
-  const newlines = text.split("\n").length - 1;
-  // Newlines weigh less than wrapped text: only many explicit line breaks count as long.
-  return text.length > lines * 55 || newlines >= lines * 2;
+/** True when the element's content is taller than its box (1 px tolerance). No layout gives false. */
+function isClipped(el: HTMLElement): boolean {
+  return el.scrollHeight > el.clientHeight + 1;
 }
 
-/** Text clamped to `lines` lines with a real expand button, shown only for long text. */
+/**
+ * Text clamped to `lines` lines with a real expand button. The button shows only when the text is
+ * really clipped: it is measured with the clamp applied, after render and on resize. While
+ * expanded the last collapsed measurement is kept, so the user can always collapse again.
+ */
 export function ClampText(props: {
   text: string;
   lines: number;
@@ -53,19 +56,47 @@ export function ClampText(props: {
 }): ReactElement {
   const { text, lines, testId, className, expandLabel, collapseLabel } = props;
   const [expanded, setExpanded] = useState(false);
-  const long = needsClamp(text, lines);
-  const clamped = long && !expanded;
+  const [clipped, setClipped] = useState(false);
+  const ref = useRef<HTMLParagraphElement | null>(null);
+  const expandedRef = useRef(expanded);
+  expandedRef.current = expanded;
+
+  // Measure while collapsed (the clamp is applied then); skip while expanded.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (el === null || expanded) return;
+    setClipped(isClipped(el));
+  }, [text, lines, expanded]);
+
+  useEffect(() => {
+    const measure = (): void => {
+      const el = ref.current;
+      if (el !== null && !expandedRef.current) setClipped(isClipped(el));
+    };
+    window.addEventListener("resize", measure);
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined" && ref.current !== null) {
+      observer = new ResizeObserver(measure);
+      observer.observe(ref.current);
+    }
+    return () => {
+      window.removeEventListener("resize", measure);
+      observer?.disconnect();
+    };
+  }, []);
+
   return (
     <>
       <p
+        ref={ref}
         className={`ec-clamp${className ? ` ${className}` : ""}`}
         data-testid={testId}
         data-lines={String(lines)}
-        data-clamped={clamped ? "true" : "false"}
+        data-clamped={expanded ? "false" : "true"}
       >
         {text}
       </p>
-      {long ? (
+      {clipped ? (
         <button
           className="ec-btn ec-toggle"
           type="button"
@@ -314,9 +345,11 @@ export interface LibraryViewProps {
   onOpenDisk: (id: string) => void;
   /** Opens a chat with the Archivist with the given fixed message. */
   onSummarise: (message: string) => void;
+  /** Theme mode; the lantern is lit in dark and unlit in light. Defaults to dark. */
+  mode?: "dark" | "light";
 }
 
-export function LibraryView({ api, onOpenDisk, onSummarise }: LibraryViewProps): ReactElement {
+export function LibraryView({ api, onOpenDisk, onSummarise, mode = "dark" }: LibraryViewProps): ReactElement {
   const [library, setLibrary] = useState<LibraryStatus | null>(null);
   const [scan, setScan] = useState<ScanStatus | null>(null);
   const [disks, setDisks] = useState<DiskCardView[] | null>(null);
@@ -459,7 +492,7 @@ export function LibraryView({ api, onOpenDisk, onSummarise }: LibraryViewProps):
 
   return (
     <div className="ec-content" data-testid="library-view">
-      <Header />
+      <Header mode={mode} />
       <SettingsArea
         library={library}
         disabled={busy}

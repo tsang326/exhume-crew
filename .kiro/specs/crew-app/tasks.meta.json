@@ -1728,6 +1728,98 @@
         "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
         "timestamp": 1794543187992
       }
+    ],
+    "23.1 Draw the lantern as SVG": [
+      {
+        "executionId": "fb60cd74-308c-470e-8998-d016fc0026c3",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794543458067
+      },
+      {
+        "executionId": "fb60cd74-308c-470e-8998-d016fc0026c3",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794543469387
+      },
+      {
+        "executionId": "fb60cd74-308c-470e-8998-d016fc0026c3",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794543584966
+      }
+    ],
+    "23.2 Add the night light overlay (Photoshop colour-dodge technique)": [
+      {
+        "executionId": "fb60cd74-308c-470e-8998-d016fc0026c3",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794543458203
+      },
+      {
+        "executionId": "fb60cd74-308c-470e-8998-d016fc0026c3",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794543589379
+      },
+      {
+        "executionId": "fb60cd74-308c-470e-8998-d016fc0026c3",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794545666472
+      }
+    ],
+    "23.3 Add the daytime light theme": [
+      {
+        "executionId": "fb60cd74-308c-470e-8998-d016fc0026c3",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794543458284
+      },
+      {
+        "executionId": "fb60cd74-308c-470e-8998-d016fc0026c3",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794545671517
+      },
+      {
+        "executionId": "fb60cd74-308c-470e-8998-d016fc0026c3",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794546693634
+      }
+    ],
+    "23.4 Small polish": [
+      {
+        "executionId": "fb60cd74-308c-470e-8998-d016fc0026c3",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794543458357
+      },
+      {
+        "executionId": "fb60cd74-308c-470e-8998-d016fc0026c3",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794546698882
+      },
+      {
+        "executionId": "fb60cd74-308c-470e-8998-d016fc0026c3",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794547122185
+      }
+    ],
+    "23.5 Add tests, update design.md, rebuild and run all checks": [
+      {
+        "executionId": "fb60cd74-308c-470e-8998-d016fc0026c3",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794543458451
+      },
+      {
+        "executionId": "fb60cd74-308c-470e-8998-d016fc0026c3",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794547128510
+      },
+      {
+        "executionId": "fb60cd74-308c-470e-8998-d016fc0026c3",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794547350192
+      }
+    ],
+    "23. Lantern light and polish (owner request after task 22; do not commit)": [
+      {
+        "executionId": "fb60cd74-308c-470e-8998-d016fc0026c3",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794547350253
+      }
     ]
   }
 }

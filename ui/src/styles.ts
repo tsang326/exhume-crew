@@ -13,6 +13,14 @@ export const STYLE_TEXT = `
 .ec-content { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 16px; padding: 16px; }
 .ec-decor { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
 .ec-decor svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ec-light { position: absolute; inset: 0; z-index: 2; overflow: hidden; pointer-events: none; }
+.ec-light-a, .ec-light-b { position: absolute; inset: 0; }
+.ec-light-a { mix-blend-mode: color-dodge; background: radial-gradient(circle at var(--ec-lx, calc(100% - 48px)) var(--ec-ly, 56px), rgba(255,214,140,.70) 0, rgba(255,196,110,.36) 90px, rgba(255,170,80,.14) 330px, rgba(255,150,60,.05) 620px, rgba(255,150,60,0) 900px); }
+.ec-light-b { mix-blend-mode: screen; background: radial-gradient(circle at var(--ec-lx, calc(100% - 48px)) var(--ec-ly, 56px), rgba(255,170,70,.16) 0, rgba(255,170,70,0) 700px); }
+.ec-root[data-light="off"] .ec-light { display: none; }
+.ec-daylight { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(circle farthest-corner at 0 0, rgba(244,248,255,.35) 0, rgba(244,248,255,0) 100%); }
+.ec-root[data-mode="light"] .ec-card, .ec-root[data-mode="light"] .ec-preview { box-shadow: 3px 4px 10px rgba(30,41,59,.12); }
+.ec-root[data-mode="light"] .ec-fog ellipse { fill: #dbe3ec; fill-opacity: 0.07; }
 .ec-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .ec-shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px 16px; list-style: none; margin: 0; padding: 0; }
 .ec-card { border: 1px solid currentColor; border-radius: 8px; padding: 12px; background: color-mix(in srgb, currentColor 5%, transparent); overflow-wrap: anywhere; }
@@ -40,9 +48,11 @@ export const STYLE_TEXT = `
 .ec-badge[data-grade="recovered"] { background: #dcfce7; color: #14532d; }
 .ec-badge[data-grade="partial"] { background: #fef3c7; color: #78350f; }
 .ec-badge[data-grade="lost"] { background: #fee2e2; color: #7f1d1d; }
-.ec-root[data-mode="dark"] .ec-badge[data-grade="recovered"] { background: #14532d; color: #bbf7d0; }
-.ec-root[data-mode="dark"] .ec-badge[data-grade="partial"] { background: #78350f; color: #fde68a; }
-.ec-root[data-mode="dark"] .ec-badge[data-grade="lost"] { background: #7f1d1d; color: #fecaca; }
+.ec-root[data-mode="dark"] .ec-badge[data-grade="recovered"] { background: #bbf7d0; color: #03140a; }
+.ec-root[data-mode="dark"] .ec-badge[data-grade="partial"] { background: #fde68a; color: #140a01; }
+.ec-root[data-mode="dark"] .ec-badge[data-grade="lost"] { background: #fecaca; color: #160404; }
+.ec-badge[data-muted="true"] { background: transparent; color: #4b5563; border-color: #6b7280; font-weight: 400; }
+.ec-root[data-mode="dark"] .ec-badge[data-muted="true"] { background: transparent; color: #cbd5e1; border-color: #94a3b8; }
 .ec-badges { display: inline-flex; flex-wrap: wrap; gap: 6px; }
 .ec-diskhead { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; max-width: 100%; overflow-wrap: anywhere; }
 .ec-diskhead .ec-title { font-size: 1.75em; }
@@ -56,10 +66,8 @@ li[data-testid="directory"].ec-grave { border-radius: 4px; border-style: solid; 
 .ec-grave-meta { display: block; font-size: 0.85em; }
 .ec-disk-grid { display: flex; flex-direction: column; gap: 16px; }
 .ec-disk-side { min-width: 0; }
-.ec-header { display: flex; align-items: center; gap: 12px; }
-.ec-header-lantern { flex: none; position: relative; display: block; width: 16px; height: 26px; margin: 6px 6px 6px 4px; border-radius: 4px; background: #ffb347; box-shadow: 0 0 12px 2px rgba(255, 179, 71, 0.45); }
-.ec-header-lantern::before { content: ""; position: absolute; left: -2px; right: -2px; top: -5px; height: 4px; border-radius: 2px; background: #6b7280; }
-.ec-header-lantern::after { content: ""; position: absolute; left: -2px; right: -2px; bottom: -5px; height: 4px; border-radius: 2px; background: #6b7280; }
+.ec-header { display: flex; align-items: flex-start; gap: 76px; min-height: 106px; }
+.ec-header-lantern { flex: none; display: block; margin: 0 4px 0 auto; overflow: visible; }
 .ec-title { margin: 0; font-size: 1.5em; line-height: 1.2; }
 .ec-subtitle { margin: 2px 0 0 0; opacity: 0.8; }
 .ec-settings-title { margin: 0; font-size: 1em; }
@@ -86,10 +94,10 @@ li[data-testid="directory"].ec-grave { border-radius: 4px; border-style: solid; 
 .ec-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .ec-btn-primary { background: #1d4ed8; color: #ffffff; border-color: #1d4ed8; font-weight: 600; padding: 6px 16px; }
 .ec-btn-primary:hover:not(:disabled) { background: #1e40af; border-color: #1e40af; }
-.ec-root[data-mode="dark"] .ec-btn-primary { background: #93c5fd; color: #0b1220; border-color: #93c5fd; }
+.ec-root[data-mode="dark"] .ec-btn-primary { background: #93c5fd; color: #030712; border-color: #93c5fd; }
 .ec-root[data-mode="dark"] .ec-btn-primary:hover:not(:disabled) { background: #bfdbfe; border-color: #bfdbfe; }
 .ec-btn-secondary { background: color-mix(in srgb, currentColor 6%, transparent); }
-.ec-btn-group { display: inline-flex; flex-wrap: wrap; gap: 6px; padding: 3px 6px; border: 1px dashed currentColor; border-radius: 8px; }
+.ec-btn-group { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 0 6px; }
 .ec-btn-open { font-weight: 600; margin-top: 6px; }
 .ec-disk-facts { margin: 4px 0; font-size: 0.9em; }
 .ec-disk-counts { margin: 6px 0; }
@@ -102,11 +110,13 @@ li[data-testid="directory"].ec-grave { border-radius: 4px; border-style: solid; 
   .ec-disk-side .ec-preview { max-height: calc(100vh - 48px); }
 }
 @media (prefers-reduced-motion: no-preference) {
-  @keyframes ec-flicker { 0% { opacity: 0.85; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
+  @keyframes ec-flicker-a { 0% { opacity: 0.96; } 38% { opacity: 1; } 71% { opacity: 0.95; } 100% { opacity: 0.99; } }
+  @keyframes ec-flicker-b { 0% { opacity: 1; } 27% { opacity: 0.95; } 64% { opacity: 0.99; } 100% { opacity: 0.96; } }
   @keyframes ec-drift { 0% { transform: translateX(-3%); } 100% { transform: translateX(3%); } }
   @keyframes ec-rise { 0% { opacity: 0; transform: translateY(4px); } 100% { opacity: 1; transform: none; } }
   .ec-grave, .ec-disk { animation: ec-rise 0.35s ease-out both; }
-  .ec-lantern-glow { animation: ec-flicker 2.4s ease-in-out infinite alternate; }
+  .ec-light-a.ec-flicker { animation: ec-flicker-a 3.7s ease-in-out infinite; }
+  .ec-light-b.ec-flicker { animation: ec-flicker-b 4.9s ease-in-out -1.8s infinite; }
   .ec-fog { animation: ec-drift 18s ease-in-out infinite alternate; }
 }
 `;

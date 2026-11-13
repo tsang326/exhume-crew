@@ -12,16 +12,6 @@ function DecorLayer() {
       "svg",
       { viewBox: "0 0 400 300", preserveAspectRatio: "xMidYMid slice", focusable: "false" },
       createElement(
-        "defs",
-        null,
-        createElement(
-          "radialGradient",
-          { id: "ec-lantern-grad" },
-          createElement("stop", { offset: "0%", stopColor: "#ffb347", stopOpacity: 0.45 }),
-          createElement("stop", { offset: "100%", stopColor: "#ffb347", stopOpacity: 0 })
-        )
-      ),
-      createElement(
         "g",
         { className: "ec-fog" },
         createElement("ellipse", { cx: 90, cy: 250, rx: 150, ry: 28, fill: "#9aa5b1", fillOpacity: 0.12 }),
@@ -32,14 +22,6 @@ function DecorLayer() {
         { className: "ec-stones", fill: "#6b7280", fillOpacity: 0.12 },
         createElement("path", { d: "M30 300 V250 a16 16 0 0 1 32 0 V300 Z" }),
         createElement("path", { d: "M70 300 V262 a12 12 0 0 1 24 0 V300 Z" })
-      ),
-      createElement(
-        "g",
-        { className: "ec-lantern" },
-        createElement("circle", { className: "ec-lantern-glow", cx: 350, cy: 50, r: 60, fill: "url(#ec-lantern-grad)" }),
-        createElement("rect", { x: 343, y: 38, width: 14, height: 24, rx: 3, fill: "#ffb347", fillOpacity: 0.35 }),
-        createElement("rect", { x: 341, y: 34, width: 18, height: 4, fill: "#6b7280", fillOpacity: 0.35 }),
-        createElement("rect", { x: 341, y: 62, width: 18, height: 4, fill: "#6b7280", fillOpacity: 0.35 })
       )
     )
   );
@@ -400,22 +382,104 @@ import { jsx, jsxs } from "react/jsx-runtime";
 function GradeBadge({
   grade,
   text,
-  testId
+  testId,
+  muted = false
 }) {
-  return /* @__PURE__ */ jsx("span", { className: "ec-badge", "data-grade": grade, "data-testid": testId, children: text });
+  return /* @__PURE__ */ jsx("span", { className: "ec-badge", "data-grade": grade, "data-muted": muted ? "true" : void 0, "data-testid": testId, children: text });
 }
 function CountBadges({
   counts
 }) {
   return /* @__PURE__ */ jsxs("span", { className: "ec-badges", "data-testid": "count-badges", children: [
-    /* @__PURE__ */ jsx(GradeBadge, { grade: "recovered", text: `Recovered ${counts.recovered}` }),
-    /* @__PURE__ */ jsx(GradeBadge, { grade: "partial", text: `Partial ${counts.partial}` }),
-    /* @__PURE__ */ jsx(GradeBadge, { grade: "lost", text: `Lost ${counts.lost}` })
+    /* @__PURE__ */ jsx(GradeBadge, { grade: "recovered", text: `Recovered ${counts.recovered}`, muted: counts.recovered === 0 }),
+    /* @__PURE__ */ jsx(GradeBadge, { grade: "partial", text: `Partial ${counts.partial}`, muted: counts.partial === 0 }),
+    /* @__PURE__ */ jsx(GradeBadge, { grade: "lost", text: `Lost ${counts.lost}`, muted: counts.lost === 0 })
   ] });
 }
 
 // ui/src/LibraryView.tsx
-import { useCallback, useEffect as useEffect2, useRef, useState as useState2 } from "react";
+import { useCallback, useEffect as useEffect2, useLayoutEffect, useRef, useState as useState2 } from "react";
+
+// ui/src/Lantern.tsx
+import { jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
+var LANTERN_VIEWBOX = { width: 40, height: 72 };
+var LANTERN_CORE = { cx: 20, cy: 42, r: 10 };
+var BRASS = "#b08d57";
+var CORE_GRADIENT_ID = "ec-lantern-core";
+function Lantern({ lit }) {
+  return /* @__PURE__ */ jsxs2(
+    "svg",
+    {
+      className: "ec-header-lantern",
+      "data-testid": "lantern",
+      "data-lit": lit ? "true" : "false",
+      viewBox: `0 0 ${LANTERN_VIEWBOX.width} ${LANTERN_VIEWBOX.height}`,
+      width: 30,
+      height: 54,
+      "aria-hidden": "true",
+      focusable: "false",
+      children: [
+        lit ? /* @__PURE__ */ jsx2("defs", { children: /* @__PURE__ */ jsxs2("radialGradient", { id: CORE_GRADIENT_ID, cx: "50%", cy: "50%", r: "50%", children: [
+          /* @__PURE__ */ jsx2("stop", { offset: "0%", stopColor: "#fff7d6" }),
+          /* @__PURE__ */ jsx2("stop", { offset: "45%", stopColor: "#ffd27a" }),
+          /* @__PURE__ */ jsx2("stop", { offset: "100%", stopColor: "#ffd27a", stopOpacity: 0 })
+        ] }) }) : null,
+        lit ? null : /* @__PURE__ */ jsx2(
+          "path",
+          {
+            "data-testid": "lantern-smoke",
+            d: "M20 12 C16 9 24 6 20 3 C18 1.5 19 1 20 0.5",
+            fill: "none",
+            stroke: "#8b94a1",
+            strokeOpacity: 0.5,
+            strokeWidth: 1,
+            strokeLinecap: "round"
+          }
+        ),
+        /* @__PURE__ */ jsx2(
+          "rect",
+          {
+            x: 11,
+            y: 28,
+            width: 18,
+            height: 28,
+            rx: 3,
+            fill: lit ? "#ffd27a" : "#9aa5b1",
+            fillOpacity: lit ? 0.14 : 0.18
+          }
+        ),
+        lit ? /* @__PURE__ */ jsx2(
+          "circle",
+          {
+            "data-testid": "lantern-core",
+            cx: LANTERN_CORE.cx,
+            cy: LANTERN_CORE.cy,
+            r: LANTERN_CORE.r,
+            fill: `url(#${CORE_GRADIENT_ID})`
+          }
+        ) : /* @__PURE__ */ jsx2(
+          "path",
+          {
+            "data-testid": "lantern-reflection",
+            d: "M14.5 32 V46",
+            fill: "none",
+            stroke: "#ffffff",
+            strokeOpacity: 0.45,
+            strokeWidth: 1.5,
+            strokeLinecap: "round"
+          }
+        ),
+        /* @__PURE__ */ jsxs2("g", { fill: "none", stroke: BRASS, strokeWidth: 1.4, strokeLinecap: "round", strokeLinejoin: "round", children: [
+          /* @__PURE__ */ jsx2("circle", { cx: 20, cy: 17, r: 4.5 }),
+          /* @__PURE__ */ jsx2("path", { d: "M13 28 L16.5 22 H23.5 L27 28 Z" }),
+          /* @__PURE__ */ jsx2("rect", { x: 11, y: 28, width: 18, height: 28, rx: 3 }),
+          /* @__PURE__ */ jsx2("path", { d: "M17 28 V56 M23 28 V56", strokeWidth: 0.8 }),
+          /* @__PURE__ */ jsx2("rect", { x: 9, y: 56, width: 22, height: 5, rx: 1.5 })
+        ] })
+      ]
+    }
+  );
+}
 
 // ui/src/lib/format.ts
 function formatBytes(bytes) {
@@ -425,9 +489,27 @@ function formatBytes(bytes) {
   if (kb < 1024) return `${kb >= 100 ? Math.round(kb) : Math.round(kb * 10) / 10} KB`;
   return `${Math.round(kb / 1024 * 10) / 10} MB`;
 }
+var ISO_DATE = /^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}):(\d{2}))?/;
+function formatDateOnly(value) {
+  if (typeof value !== "string") return null;
+  const t = value.trim();
+  if (t === "") return null;
+  const m = ISO_DATE.exec(t);
+  return m !== null ? m[1] ?? t : t;
+}
+function formatDateTime(value) {
+  if (typeof value !== "string") return null;
+  const t = value.trim();
+  if (t === "") return null;
+  const m = ISO_DATE.exec(t);
+  if (m === null) return t;
+  return m[2] !== void 0 && m[3] !== void 0 ? `${m[1]} ${m[2]}:${m[3]}` : m[1] ?? t;
+}
 function formatDateRange(first, last) {
-  if (first !== null && last !== null) return first === last ? first : `${first} to ${last}`;
-  return first ?? last;
+  const a = formatDateOnly(first);
+  const b = formatDateOnly(last);
+  if (a !== null && b !== null) return a === b ? a : `${a} to ${b}`;
+  return a ?? b;
 }
 function formatGeometry(g) {
   return g.source !== "none" && g.label !== null && g.label !== "" ? g.label : "unknown geometry";
@@ -487,43 +569,66 @@ function buildUndertakerMessage(id) {
 }
 
 // ui/src/LibraryView.tsx
-import { Fragment, jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
+import { Fragment, jsx as jsx3, jsxs as jsxs3 } from "react/jsx-runtime";
 var GENERIC_SAVE_ERROR = "The library folder could not be set.";
 var MAX_ERROR_TEXT = 300;
 function errorText(err, fallback) {
   if (err instanceof Error && err.message.trim() !== "") return err.message.slice(0, MAX_ERROR_TEXT);
   return fallback;
 }
-function Header() {
-  return /* @__PURE__ */ jsxs2("header", { className: "ec-header", "data-testid": "app-header", children: [
-    /* @__PURE__ */ jsx2("span", { className: "ec-header-lantern", "aria-hidden": "true" }),
-    /* @__PURE__ */ jsxs2("div", { children: [
-      /* @__PURE__ */ jsx2("h1", { className: "ec-title", children: "Exhume Crew" }),
-      /* @__PURE__ */ jsx2("p", { className: "ec-subtitle", children: "A crew for a box of old floppy disks" })
-    ] })
+function Header({ mode = "dark" }) {
+  return /* @__PURE__ */ jsxs3("header", { className: "ec-header", "data-testid": "app-header", children: [
+    /* @__PURE__ */ jsxs3("div", { children: [
+      /* @__PURE__ */ jsx3("h1", { className: "ec-title", children: "Exhume Crew" }),
+      /* @__PURE__ */ jsx3("p", { className: "ec-subtitle", children: "A crew for a box of old floppy disks" })
+    ] }),
+    /* @__PURE__ */ jsx3(Lantern, { lit: mode === "dark" })
   ] });
 }
-function needsClamp(text, lines) {
-  const newlines = text.split("\n").length - 1;
-  return text.length > lines * 55 || newlines >= lines * 2;
+function isClipped(el) {
+  return el.scrollHeight > el.clientHeight + 1;
 }
 function ClampText(props) {
   const { text, lines, testId, className, expandLabel, collapseLabel } = props;
   const [expanded, setExpanded] = useState2(false);
-  const long = needsClamp(text, lines);
-  const clamped = long && !expanded;
-  return /* @__PURE__ */ jsxs2(Fragment, { children: [
-    /* @__PURE__ */ jsx2(
+  const [clipped, setClipped] = useState2(false);
+  const ref = useRef(null);
+  const expandedRef = useRef(expanded);
+  expandedRef.current = expanded;
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (el === null || expanded) return;
+    setClipped(isClipped(el));
+  }, [text, lines, expanded]);
+  useEffect2(() => {
+    const measure2 = () => {
+      const el = ref.current;
+      if (el !== null && !expandedRef.current) setClipped(isClipped(el));
+    };
+    window.addEventListener("resize", measure2);
+    let observer = null;
+    if (typeof ResizeObserver !== "undefined" && ref.current !== null) {
+      observer = new ResizeObserver(measure2);
+      observer.observe(ref.current);
+    }
+    return () => {
+      window.removeEventListener("resize", measure2);
+      observer?.disconnect();
+    };
+  }, []);
+  return /* @__PURE__ */ jsxs3(Fragment, { children: [
+    /* @__PURE__ */ jsx3(
       "p",
       {
+        ref,
         className: `ec-clamp${className ? ` ${className}` : ""}`,
         "data-testid": testId,
         "data-lines": String(lines),
-        "data-clamped": clamped ? "true" : "false",
+        "data-clamped": expanded ? "false" : "true",
         children: text
       }
     ),
-    long ? /* @__PURE__ */ jsx2(
+    clipped ? /* @__PURE__ */ jsx3(
       "button",
       {
         className: "ec-btn ec-toggle",
@@ -545,8 +650,8 @@ function SettingsArea(props) {
   const [userOpen, setUserOpen] = useState2(null);
   const usable = library !== null && library.path !== null && library.error === null;
   const open = userOpen ?? (library !== null && !usable);
-  return /* @__PURE__ */ jsxs2("section", { className: "ec-card", "aria-label": "Settings", "data-testid": "settings-area", children: [
-    /* @__PURE__ */ jsx2("h2", { className: "ec-settings-title", children: /* @__PURE__ */ jsx2(
+  return /* @__PURE__ */ jsxs3("section", { className: "ec-card", "aria-label": "Settings", "data-testid": "settings-area", children: [
+    /* @__PURE__ */ jsx3("h2", { className: "ec-settings-title", children: /* @__PURE__ */ jsx3(
       "button",
       {
         className: "ec-btn ec-settings-toggle",
@@ -557,8 +662,8 @@ function SettingsArea(props) {
         children: "Library folder"
       }
     ) }),
-    /* @__PURE__ */ jsxs2("div", { id: "ec-settings-body", hidden: !open, "data-testid": "settings-body", children: [
-      /* @__PURE__ */ jsxs2(
+    /* @__PURE__ */ jsxs3("div", { id: "ec-settings-body", hidden: !open, "data-testid": "settings-body", children: [
+      /* @__PURE__ */ jsxs3(
         "form",
         {
           className: "ec-row",
@@ -567,8 +672,8 @@ function SettingsArea(props) {
             onSave(path);
           },
           children: [
-            /* @__PURE__ */ jsx2("label", { htmlFor: "ec-library-path", children: "Library path" }),
-            /* @__PURE__ */ jsx2(
+            /* @__PURE__ */ jsx3("label", { htmlFor: "ec-library-path", children: "Library path" }),
+            /* @__PURE__ */ jsx3(
               "input",
               {
                 id: "ec-library-path",
@@ -578,60 +683,60 @@ function SettingsArea(props) {
                 onChange: (e) => setPath(e.target.value)
               }
             ),
-            /* @__PURE__ */ jsx2("button", { className: "ec-btn", type: "submit", disabled: disabled || path.trim() === "", children: "Save" }),
-            /* @__PURE__ */ jsx2("button", { className: "ec-btn", type: "button", disabled, onClick: onUseDemo, children: "Use demo library" })
+            /* @__PURE__ */ jsx3("button", { className: "ec-btn", type: "submit", disabled: disabled || path.trim() === "", children: "Save" }),
+            /* @__PURE__ */ jsx3("button", { className: "ec-btn", type: "button", disabled, onClick: onUseDemo, children: "Use demo library" })
           ]
         }
       ),
-      /* @__PURE__ */ jsxs2("p", { className: "ec-muted", children: [
+      /* @__PURE__ */ jsxs3("p", { className: "ec-muted", children: [
         "Current library: ",
-        /* @__PURE__ */ jsx2("span", { "data-testid": "library-path", children: library?.path ?? "not set" })
+        /* @__PURE__ */ jsx3("span", { "data-testid": "library-path", children: library?.path ?? "not set" })
       ] }),
-      library?.error ? /* @__PURE__ */ jsx2("p", { role: "alert", className: "ec-error", "data-testid": "library-error", children: library.error.message }) : null,
-      saveError ? /* @__PURE__ */ jsx2("p", { role: "alert", className: "ec-error", children: saveError }) : null,
-      demoError ? /* @__PURE__ */ jsx2("p", { role: "alert", className: "ec-error", children: demoError }) : null
+      library?.error ? /* @__PURE__ */ jsx3("p", { role: "alert", className: "ec-error", "data-testid": "library-error", children: library.error.message }) : null,
+      saveError ? /* @__PURE__ */ jsx3("p", { role: "alert", className: "ec-error", children: saveError }) : null,
+      demoError ? /* @__PURE__ */ jsx3("p", { role: "alert", className: "ec-error", children: demoError }) : null
     ] })
   ] });
 }
 function Toolbar(props) {
   const { scanning, hasDisks, onRescan, onExportCsv, onExportMarkdown, onSummarise } = props;
   const needDisks = scanning || !hasDisks;
-  return /* @__PURE__ */ jsxs2("div", { className: "ec-row", role: "toolbar", "aria-label": "Library actions", children: [
-    /* @__PURE__ */ jsx2("button", { className: "ec-btn ec-btn-primary", type: "button", disabled: needDisks, onClick: onSummarise, children: "Summarise new disks" }),
-    /* @__PURE__ */ jsxs2("div", { className: "ec-btn-group", role: "group", "aria-label": "Export", "data-testid": "export-group", children: [
-      /* @__PURE__ */ jsx2("button", { className: "ec-btn ec-btn-secondary", type: "button", disabled: needDisks, onClick: onExportCsv, children: "Export CSV" }),
-      /* @__PURE__ */ jsx2("button", { className: "ec-btn ec-btn-secondary", type: "button", disabled: needDisks, onClick: onExportMarkdown, children: "Export Markdown" })
+  return /* @__PURE__ */ jsxs3("div", { className: "ec-row", role: "toolbar", "aria-label": "Library actions", children: [
+    /* @__PURE__ */ jsx3("button", { className: "ec-btn ec-btn-primary", type: "button", disabled: needDisks, onClick: onSummarise, children: "Summarise new disks" }),
+    /* @__PURE__ */ jsxs3("div", { className: "ec-btn-group", role: "group", "aria-label": "Export", "data-testid": "export-group", children: [
+      /* @__PURE__ */ jsx3("button", { className: "ec-btn ec-btn-secondary", type: "button", disabled: needDisks, onClick: onExportCsv, children: "Export CSV" }),
+      /* @__PURE__ */ jsx3("button", { className: "ec-btn ec-btn-secondary", type: "button", disabled: needDisks, onClick: onExportMarkdown, children: "Export Markdown" })
     ] }),
-    /* @__PURE__ */ jsx2("button", { className: "ec-btn ec-btn-secondary", type: "button", disabled: scanning, onClick: onRescan, children: "Rescan" })
+    /* @__PURE__ */ jsx3("button", { className: "ec-btn ec-btn-secondary", type: "button", disabled: scanning, onClick: onRescan, children: "Rescan" })
   ] });
 }
 function ScanProgress({ scan }) {
   if (scan === null) return null;
   if (scan.state === "running") {
-    return /* @__PURE__ */ jsx2("p", { role: "status", "data-testid": "scan-progress", children: `Scanned ${scan.scanned} of ${scan.total} disks` });
+    return /* @__PURE__ */ jsx3("p", { role: "status", "data-testid": "scan-progress", children: `Scanned ${scan.scanned} of ${scan.total} disks` });
   }
   if (scan.state === "failed") {
-    return /* @__PURE__ */ jsx2("p", { role: "alert", className: "ec-error", "data-testid": "scan-error", children: "The scan failed." });
+    return /* @__PURE__ */ jsx3("p", { role: "alert", className: "ec-error", "data-testid": "scan-error", children: "The scan failed." });
   }
   return null;
 }
 function EmptyState({ disabled, onUseDemo }) {
-  return /* @__PURE__ */ jsxs2("section", { className: "ec-card", "aria-label": "Empty library", "data-testid": "empty-state", children: [
-    /* @__PURE__ */ jsx2("h2", { children: "No disks yet" }),
-    /* @__PURE__ */ jsx2("p", { children: "Put disk image files (.img) into your library folder and press Rescan, or type a different folder in the settings above and press Save." }),
-    /* @__PURE__ */ jsx2("button", { className: "ec-btn", type: "button", disabled, onClick: onUseDemo, children: "Use demo library" })
+  return /* @__PURE__ */ jsxs3("section", { className: "ec-card", "aria-label": "Empty library", "data-testid": "empty-state", children: [
+    /* @__PURE__ */ jsx3("h2", { children: "No disks yet" }),
+    /* @__PURE__ */ jsx3("p", { children: "Put disk image files (.img) into your library folder and press Rescan, or type a different folder in the settings above and press Save." }),
+    /* @__PURE__ */ jsx3("button", { className: "ec-btn", type: "button", disabled, onClick: onUseDemo, children: "Use demo library" })
   ] });
 }
 function DiskCard({ card, onOpen }) {
   const name = card.label === "" ? "Untitled disk" : card.label;
-  return /* @__PURE__ */ jsxs2("li", { className: "ec-card ec-disk", "data-testid": "disk-card", children: [
-    /* @__PURE__ */ jsx2("span", { className: "ec-disk-shutter", "aria-hidden": "true" }),
-    /* @__PURE__ */ jsx2("h3", { className: "ec-disk-label", children: name }),
-    /* @__PURE__ */ jsx2("p", { className: "ec-disk-facts", "data-testid": "card-facts", children: `${formatBytes(card.sizeBytes)} | ${formatFileCount(card.fileCount)} | ${formatDateRange(card.dateFirst, card.dateLast) ?? "no date"}` }),
-    /* @__PURE__ */ jsx2("p", { children: /* @__PURE__ */ jsx2("span", { className: "ec-badge", "data-testid": "card-status", children: card.status }) }),
-    /* @__PURE__ */ jsx2("p", { className: "ec-disk-counts", "data-testid": "card-counts", children: /* @__PURE__ */ jsx2(CountBadges, { counts: card.counts }) }),
-    /* @__PURE__ */ jsx2("p", { "data-testid": "card-warnings", children: `Warnings: ${card.warnings.length}` }),
-    /* @__PURE__ */ jsx2(
+  return /* @__PURE__ */ jsxs3("li", { className: "ec-card ec-disk", "data-testid": "disk-card", children: [
+    /* @__PURE__ */ jsx3("span", { className: "ec-disk-shutter", "aria-hidden": "true" }),
+    /* @__PURE__ */ jsx3("h3", { className: "ec-disk-label", children: name }),
+    /* @__PURE__ */ jsx3("p", { className: "ec-disk-facts", "data-testid": "card-facts", children: `${formatBytes(card.sizeBytes)} | ${formatFileCount(card.fileCount)} | ${formatDateRange(card.dateFirst, card.dateLast) ?? "no date"}` }),
+    /* @__PURE__ */ jsx3("p", { children: /* @__PURE__ */ jsx3("span", { className: "ec-badge", "data-testid": "card-status", children: card.status }) }),
+    /* @__PURE__ */ jsx3("p", { className: "ec-disk-counts", "data-testid": "card-counts", children: /* @__PURE__ */ jsx3(CountBadges, { counts: card.counts }) }),
+    /* @__PURE__ */ jsx3("p", { "data-testid": "card-warnings", children: `Warnings: ${card.warnings.length}` }),
+    /* @__PURE__ */ jsx3(
       "button",
       {
         className: "ec-btn ec-btn-secondary ec-btn-open",
@@ -641,7 +746,7 @@ function DiskCard({ card, onOpen }) {
         children: "Open disk"
       }
     ),
-    card.summary ? /* @__PURE__ */ jsx2(
+    card.summary ? /* @__PURE__ */ jsx3(
       ClampText,
       {
         text: card.summary.text,
@@ -650,8 +755,8 @@ function DiskCard({ card, onOpen }) {
         expandLabel: "Show full summary",
         collapseLabel: "Show less"
       }
-    ) : /* @__PURE__ */ jsx2("p", { "data-testid": "card-summary", className: "ec-muted", children: "No summary yet" }),
-    card.notes.length > 0 ? /* @__PURE__ */ jsx2("ul", { "data-testid": "card-notes", children: card.notes.map((n) => /* @__PURE__ */ jsx2("li", { children: /* @__PURE__ */ jsx2(
+    ) : /* @__PURE__ */ jsx3("p", { "data-testid": "card-summary", className: "ec-muted", children: "No summary yet" }),
+    card.notes.length > 0 ? /* @__PURE__ */ jsx3("ul", { "data-testid": "card-notes", children: card.notes.map((n) => /* @__PURE__ */ jsx3("li", { children: /* @__PURE__ */ jsx3(
       ClampText,
       {
         text: n.text,
@@ -659,13 +764,13 @@ function DiskCard({ card, onOpen }) {
         expandLabel: "Show full note",
         collapseLabel: "Show less"
       }
-    ) }, n.id)) }) : /* @__PURE__ */ jsx2("p", { "data-testid": "card-notes", className: "ec-muted", children: "No notes yet" })
+    ) }, n.id)) }) : /* @__PURE__ */ jsx3("p", { "data-testid": "card-notes", className: "ec-muted", children: "No notes yet" })
   ] });
 }
 function Shelf({ disks, onOpen }) {
-  return /* @__PURE__ */ jsx2("ul", { className: "ec-shelf", "aria-label": "Disks", "data-testid": "shelf", children: disks.map((c) => /* @__PURE__ */ jsx2(DiskCard, { card: c, onOpen }, c.diskId)) });
+  return /* @__PURE__ */ jsx3("ul", { className: "ec-shelf", "aria-label": "Disks", "data-testid": "shelf", children: disks.map((c) => /* @__PURE__ */ jsx3(DiskCard, { card: c, onOpen }, c.diskId)) });
 }
-function LibraryView({ api, onOpenDisk, onSummarise }) {
+function LibraryView({ api, onOpenDisk, onSummarise, mode = "dark" }) {
   const [library, setLibrary] = useState2(null);
   const [scan, setScan] = useState2(null);
   const [disks, setDisks] = useState2(null);
@@ -784,9 +889,9 @@ function LibraryView({ api, onOpenDisk, onSummarise }) {
     onSummarise(message);
   };
   const hasDisks = disks !== null && disks.length > 0;
-  return /* @__PURE__ */ jsxs2("div", { className: "ec-content", "data-testid": "library-view", children: [
-    /* @__PURE__ */ jsx2(Header, {}),
-    /* @__PURE__ */ jsx2(
+  return /* @__PURE__ */ jsxs3("div", { className: "ec-content", "data-testid": "library-view", children: [
+    /* @__PURE__ */ jsx3(Header, { mode }),
+    /* @__PURE__ */ jsx3(
       SettingsArea,
       {
         library,
@@ -797,7 +902,7 @@ function LibraryView({ api, onOpenDisk, onSummarise }) {
         onUseDemo
       }
     ),
-    /* @__PURE__ */ jsx2(
+    /* @__PURE__ */ jsx3(
       Toolbar,
       {
         scanning,
@@ -808,15 +913,15 @@ function LibraryView({ api, onOpenDisk, onSummarise }) {
         onSummarise: onSummariseNew
       }
     ),
-    /* @__PURE__ */ jsx2(ScanProgress, { scan }),
-    /* @__PURE__ */ jsx2("div", { role: "status", "data-testid": "notice", children: notice }),
-    disks !== null && disks.length === 0 ? /* @__PURE__ */ jsx2(EmptyState, { disabled: busy, onUseDemo }) : null,
-    disks !== null && disks.length > 0 ? /* @__PURE__ */ jsx2(Shelf, { disks, onOpen: onOpenDisk }) : null
+    /* @__PURE__ */ jsx3(ScanProgress, { scan }),
+    /* @__PURE__ */ jsx3("div", { role: "status", "data-testid": "notice", children: notice }),
+    disks !== null && disks.length === 0 ? /* @__PURE__ */ jsx3(EmptyState, { disabled: busy, onUseDemo }) : null,
+    disks !== null && disks.length > 0 ? /* @__PURE__ */ jsx3(Shelf, { disks, onOpen: onOpenDisk }) : null
   ] });
 }
 
 // ui/src/DiskView.tsx
-import { Fragment as Fragment2, jsx as jsx3, jsxs as jsxs3 } from "react/jsx-runtime";
+import { Fragment as Fragment2, jsx as jsx4, jsxs as jsxs4 } from "react/jsx-runtime";
 var EXHUME_ALL_TOOLTIP = "Exhumes live files and deleted entries graded recovered.";
 function relativeOutput(outputPath) {
   const norm = outputPath.replace(/\\/g, "/");
@@ -840,25 +945,25 @@ function Grave({
   const conversion = isFile && entry.state !== "lost" ? conversionFor(entry.path) : null;
   const meta = [
     isFile ? formatBytes(entry.size) : "folder",
-    entry.date ?? "no date",
+    formatDateTime(entry.date) ?? "no date",
     ...conversion !== null ? [`Converts: ${conversion}`] : []
   ].join(" | ");
-  const body = /* @__PURE__ */ jsxs3(Fragment2, { children: [
-    /* @__PURE__ */ jsx3("span", { className: "ec-grave-name", children: entry.path }),
-    /* @__PURE__ */ jsx3("span", { className: "ec-grave-meta ec-muted", "data-testid": "grave-meta", children: meta }),
-    deleted ? /* @__PURE__ */ jsxs3("span", { className: "ec-grave-grade", "data-testid": "grave-grade", children: [
-      /* @__PURE__ */ jsx3(GradeBadge, { grade: entry.state, text: `Grade: ${entry.state}` }),
-      entry.reason !== void 0 ? /* @__PURE__ */ jsx3("span", { children: ` ${entry.reason}` }) : null
+  const body = /* @__PURE__ */ jsxs4(Fragment2, { children: [
+    /* @__PURE__ */ jsx4("span", { className: "ec-grave-name", children: entry.path }),
+    /* @__PURE__ */ jsx4("span", { className: "ec-grave-meta ec-muted", "data-testid": "grave-meta", children: meta }),
+    deleted ? /* @__PURE__ */ jsxs4("span", { className: "ec-grave-grade", "data-testid": "grave-grade", children: [
+      /* @__PURE__ */ jsx4(GradeBadge, { grade: entry.state, text: `Grade: ${entry.state}` }),
+      entry.reason !== void 0 ? /* @__PURE__ */ jsx4("span", { children: ` ${entry.reason}` }) : null
     ] }) : null
   ] });
-  return /* @__PURE__ */ jsxs3(
+  return /* @__PURE__ */ jsxs4(
     "li",
     {
       className: "ec-grave",
       "data-testid": isFile ? deleted ? "open-grave" : "tombstone" : "directory",
       "data-selected": selected ? "true" : "false",
       children: [
-        /* @__PURE__ */ jsx3(
+        /* @__PURE__ */ jsx4(
           "span",
           {
             className: "ec-grave-mark",
@@ -867,7 +972,7 @@ function Grave({
             "data-h": isFile && !deleted ? String(stoneHeight(index)) : void 0
           }
         ),
-        isFile ? /* @__PURE__ */ jsx3(
+        isFile ? /* @__PURE__ */ jsx4(
           "button",
           {
             className: "ec-grave-btn",
@@ -877,7 +982,7 @@ function Grave({
             onClick: () => onSelect(entry.id),
             children: body
           }
-        ) : /* @__PURE__ */ jsx3("div", { className: "ec-grave-static", children: body })
+        ) : /* @__PURE__ */ jsx4("div", { className: "ec-grave-static", children: body })
       ]
     }
   );
@@ -887,7 +992,7 @@ function Graveyard({
   selected,
   onSelect
 }) {
-  return /* @__PURE__ */ jsx3("ul", { className: "ec-graveyard", "aria-label": "Graveyard", "data-testid": "graveyard", children: files.map((f, i) => /* @__PURE__ */ jsx3(Grave, { entry: f, index: i, selected: selected === f.id, onSelect }, f.id)) });
+  return /* @__PURE__ */ jsx4("ul", { className: "ec-graveyard", "aria-label": "Graveyard", "data-testid": "graveyard", children: files.map((f, i) => /* @__PURE__ */ jsx4(Grave, { entry: f, index: i, selected: selected === f.id, onSelect }, f.id)) });
 }
 function DiskHeader({ card }) {
   const range = formatDateRange(card.dateFirst, card.dateLast);
@@ -897,13 +1002,13 @@ function DiskHeader({ card }) {
     formatFileCount(card.fileCount),
     range ?? "no dates"
   ];
-  return /* @__PURE__ */ jsxs3("header", { className: "ec-diskhead", "data-testid": "disk-header", children: [
-    /* @__PURE__ */ jsx3("h1", { className: "ec-title", "data-testid": "disk-title", children: card.label === "" ? card.relPath : card.label }),
-    card.label !== "" ? /* @__PURE__ */ jsx3("p", { className: "ec-subtitle ec-muted", "data-testid": "disk-relpath", children: card.relPath }) : null,
-    /* @__PURE__ */ jsx3("ul", { className: "ec-facts", "aria-label": "Disk facts", "data-testid": "disk-facts", children: facts.map((f, i) => /* @__PURE__ */ jsx3("li", { children: f }, i)) }),
-    /* @__PURE__ */ jsx3(CountBadges, { counts: card.counts }),
-    card.warnings.length > 0 ? /* @__PURE__ */ jsx3("ul", { className: "ec-warnings", "aria-label": "Warnings", "data-testid": "disk-warnings", children: card.warnings.map((w, i) => /* @__PURE__ */ jsx3("li", { children: w.message }, i)) }) : null,
-    card.summary ? /* @__PURE__ */ jsx3(
+  return /* @__PURE__ */ jsxs4("header", { className: "ec-diskhead", "data-testid": "disk-header", children: [
+    /* @__PURE__ */ jsx4("h1", { className: "ec-title", "data-testid": "disk-title", children: card.label === "" ? card.relPath : card.label }),
+    card.label !== "" ? /* @__PURE__ */ jsx4("p", { className: "ec-subtitle ec-muted", "data-testid": "disk-relpath", children: card.relPath }) : null,
+    /* @__PURE__ */ jsx4("ul", { className: "ec-facts", "aria-label": "Disk facts", "data-testid": "disk-facts", children: facts.map((f, i) => /* @__PURE__ */ jsx4("li", { children: f }, i)) }),
+    /* @__PURE__ */ jsx4(CountBadges, { counts: card.counts }),
+    card.warnings.length > 0 ? /* @__PURE__ */ jsx4("ul", { className: "ec-warnings", "aria-label": "Warnings", "data-testid": "disk-warnings", children: card.warnings.map((w, i) => /* @__PURE__ */ jsx4("li", { children: w.message }, i)) }) : null,
+    card.summary ? /* @__PURE__ */ jsx4(
       ClampText,
       {
         text: card.summary.text,
@@ -912,17 +1017,17 @@ function DiskHeader({ card }) {
         expandLabel: "Show full summary",
         collapseLabel: "Show less"
       }
-    ) : /* @__PURE__ */ jsx3("p", { className: "ec-muted", "data-testid": "disk-summary", children: "No summary yet" }),
-    card.notes.length > 0 ? /* @__PURE__ */ jsxs3("section", { "aria-label": "Notes", "data-testid": "disk-notes", children: [
-      /* @__PURE__ */ jsx3("h2", { className: "ec-settings-title", children: "Notes" }),
-      /* @__PURE__ */ jsx3("ul", { className: "ec-notes", children: card.notes.map((n) => /* @__PURE__ */ jsx3("li", { children: /* @__PURE__ */ jsx3(ClampText, { text: n.text, lines: 2, expandLabel: "Show full note", collapseLabel: "Show less" }) }, n.id)) })
+    ) : /* @__PURE__ */ jsx4("p", { className: "ec-muted", "data-testid": "disk-summary", children: "No summary yet" }),
+    card.notes.length > 0 ? /* @__PURE__ */ jsxs4("section", { "aria-label": "Notes", "data-testid": "disk-notes", children: [
+      /* @__PURE__ */ jsx4("h2", { className: "ec-settings-title", children: "Notes" }),
+      /* @__PURE__ */ jsx4("ul", { className: "ec-notes", children: card.notes.map((n) => /* @__PURE__ */ jsx4("li", { children: /* @__PURE__ */ jsx4(ClampText, { text: n.text, lines: 2, expandLabel: "Show full note", collapseLabel: "Show less" }) }, n.id)) })
     ] }) : null
   ] });
 }
 function NotFound({ onBack }) {
-  return /* @__PURE__ */ jsxs3("div", { className: "ec-content", "data-testid": "disk-not-found", children: [
-    /* @__PURE__ */ jsx3("button", { className: "ec-btn", type: "button", onClick: onBack, children: "Back to library" }),
-    /* @__PURE__ */ jsx3("p", { role: "alert", className: "ec-error", children: "This disk does not exist." })
+  return /* @__PURE__ */ jsxs4("div", { className: "ec-content", "data-testid": "disk-not-found", children: [
+    /* @__PURE__ */ jsx4("button", { className: "ec-btn", type: "button", onClick: onBack, children: "Back to library" }),
+    /* @__PURE__ */ jsx4("p", { role: "alert", className: "ec-error", children: "This disk does not exist." })
   ] });
 }
 function DiskView({ api, diskId, onBack, onAskUndertaker }) {
@@ -968,11 +1073,11 @@ function DiskView({ api, diskId, onBack, onAskUndertaker }) {
       current = false;
     };
   }, [api, diskId]);
-  if (load.phase === "notfound") return /* @__PURE__ */ jsx3(NotFound, { onBack });
+  if (load.phase === "notfound") return /* @__PURE__ */ jsx4(NotFound, { onBack });
   if (load.phase !== "ready") {
-    return /* @__PURE__ */ jsxs3("div", { className: "ec-content", "data-testid": "disk-view", children: [
-      /* @__PURE__ */ jsx3("button", { className: "ec-btn", type: "button", onClick: onBack, children: "Back to library" }),
-      load.phase === "loading" ? /* @__PURE__ */ jsx3("p", { role: "status", children: "Loading disk..." }) : /* @__PURE__ */ jsx3("p", { role: "alert", className: "ec-error", children: "The disk could not be loaded." })
+    return /* @__PURE__ */ jsxs4("div", { className: "ec-content", "data-testid": "disk-view", children: [
+      /* @__PURE__ */ jsx4("button", { className: "ec-btn", type: "button", onClick: onBack, children: "Back to library" }),
+      load.phase === "loading" ? /* @__PURE__ */ jsx4("p", { role: "status", children: "Loading disk..." }) : /* @__PURE__ */ jsx4("p", { role: "alert", className: "ec-error", children: "The disk could not be loaded." })
     ] });
   }
   const { detail } = load;
@@ -990,15 +1095,15 @@ function DiskView({ api, diskId, onBack, onAskUndertaker }) {
     );
   };
   const nameFor = (r) => detail.files.find((f) => f.id === r.entry)?.path ?? r.path;
-  return /* @__PURE__ */ jsxs3("div", { className: "ec-content", "data-testid": "disk-view", children: [
-    /* @__PURE__ */ jsxs3("div", { className: "ec-row", children: [
-      /* @__PURE__ */ jsx3("button", { className: "ec-btn", type: "button", onClick: onBack, children: "Back to library" }),
-      /* @__PURE__ */ jsx3("button", { className: "ec-btn", type: "button", onClick: () => onAskUndertaker(diskId), children: "Ask the undertaker" })
+  return /* @__PURE__ */ jsxs4("div", { className: "ec-content", "data-testid": "disk-view", children: [
+    /* @__PURE__ */ jsxs4("div", { className: "ec-row", children: [
+      /* @__PURE__ */ jsx4("button", { className: "ec-btn", type: "button", onClick: onBack, children: "Back to library" }),
+      /* @__PURE__ */ jsx4("button", { className: "ec-btn", type: "button", onClick: () => onAskUndertaker(diskId), children: "Ask the undertaker" })
     ] }),
-    /* @__PURE__ */ jsx3(DiskHeader, { card: detail.card }),
-    truncated ? /* @__PURE__ */ jsx3("p", { role: "note", className: "ec-card", "data-testid": "truncation-notice", children: `Showing ${detail.files.length} of ${detail.totalEntries} entries. "Exhume all recoverable" covers only the entries shown.` }) : null,
-    /* @__PURE__ */ jsxs3("div", { className: "ec-row", children: [
-      /* @__PURE__ */ jsx3(
+    /* @__PURE__ */ jsx4(DiskHeader, { card: detail.card }),
+    truncated ? /* @__PURE__ */ jsx4("p", { role: "note", className: "ec-card", "data-testid": "truncation-notice", children: `Showing ${detail.files.length} of ${detail.totalEntries} entries. "Exhume all recoverable" covers only the entries shown.` }) : null,
+    /* @__PURE__ */ jsxs4("div", { className: "ec-row", children: [
+      /* @__PURE__ */ jsx4(
         "button",
         {
           className: "ec-btn",
@@ -1010,17 +1115,56 @@ function DiskView({ api, diskId, onBack, onAskUndertaker }) {
           children: "Exhume all recoverable"
         }
       ),
-      /* @__PURE__ */ jsx3("span", { id: "ec-exhume-tip", className: "ec-muted", children: EXHUME_ALL_TOOLTIP })
+      /* @__PURE__ */ jsx4("span", { id: "ec-exhume-tip", className: "ec-muted", children: EXHUME_ALL_TOOLTIP })
     ] }),
-    exhume.phase === "error" ? /* @__PURE__ */ jsx3("p", { role: "alert", className: "ec-error", "data-testid": "exhume-error", children: "The exhume request failed." }) : null,
-    exhume.phase === "done" ? /* @__PURE__ */ jsxs3("div", { children: [
-      /* @__PURE__ */ jsx3("ul", { "aria-label": "Exhume results", "data-testid": "exhume-results", children: exhume.results.map((r, i) => /* @__PURE__ */ jsx3("li", { "data-outcome": r.outcome, children: r.outcome === "exhumed" && r.outputPath !== void 0 ? `${nameFor(r)} -> ${relativeOutput(r.outputPath)}` : r.outcome === "exhumed" ? `${nameFor(r)}: succeeded` : `${nameFor(r)}: failed${r.errorCode !== void 0 ? ` (${r.errorCode})` : ""}` }, `${r.entry}-${i}`)) }),
-      /* @__PURE__ */ jsx3("p", { className: "ec-muted", "data-testid": "exhume-location", children: libraryPath !== null ? `Exhumed files are in ${libraryPath.replace(/[\\/]+$/, "")}/exhumed/` : "Exhumed files are in the library's exhumed/ folder." })
+    exhume.phase === "error" ? /* @__PURE__ */ jsx4("p", { role: "alert", className: "ec-error", "data-testid": "exhume-error", children: "The exhume request failed." }) : null,
+    exhume.phase === "done" ? /* @__PURE__ */ jsxs4("div", { children: [
+      /* @__PURE__ */ jsx4("ul", { "aria-label": "Exhume results", "data-testid": "exhume-results", children: exhume.results.map((r, i) => /* @__PURE__ */ jsx4("li", { "data-outcome": r.outcome, children: r.outcome === "exhumed" && r.outputPath !== void 0 ? `${nameFor(r)} -> ${relativeOutput(r.outputPath)}` : r.outcome === "exhumed" ? `${nameFor(r)}: succeeded` : `${nameFor(r)}: failed${r.errorCode !== void 0 ? ` (${r.errorCode})` : ""}` }, `${r.entry}-${i}`)) }),
+      /* @__PURE__ */ jsx4("p", { className: "ec-muted", "data-testid": "exhume-location", children: libraryPath !== null ? `Exhumed files are in ${libraryPath.replace(/[\\/]+$/, "")}/exhumed/` : "Exhumed files are in the library's exhumed/ folder." })
     ] }) : null,
-    /* @__PURE__ */ jsxs3("div", { className: "ec-disk-grid", "data-testid": "disk-grid", children: [
-      /* @__PURE__ */ jsx3(Graveyard, { files: detail.files, selected, onSelect: setSelected }),
-      /* @__PURE__ */ jsx3("div", { className: "ec-disk-side", "data-testid": "preview-column", children: /* @__PURE__ */ jsx3(PreviewPane, { api, diskId, entry: selected }) })
+    /* @__PURE__ */ jsxs4("div", { className: "ec-disk-grid", "data-testid": "disk-grid", children: [
+      /* @__PURE__ */ jsx4(Graveyard, { files: detail.files, selected, onSelect: setSelected }),
+      /* @__PURE__ */ jsx4("div", { className: "ec-disk-side", "data-testid": "preview-column", children: /* @__PURE__ */ jsx4(PreviewPane, { api, diskId, entry: selected }) })
     ] })
+  ] });
+}
+
+// ui/src/LightLayers.tsx
+import { useLayoutEffect as useLayoutEffect2, useRef as useRef3 } from "react";
+import { jsx as jsx5, jsxs as jsxs5 } from "react/jsx-runtime";
+function measure(root) {
+  const core = root.querySelector('[data-testid="lantern-core"]');
+  if (core === null) {
+    root.setAttribute("data-light", "off");
+    return;
+  }
+  root.setAttribute("data-light", "on");
+  const c = core.getBoundingClientRect();
+  const r = root.getBoundingClientRect();
+  root.style.setProperty("--ec-lx", `${Math.round(c.left - r.left + c.width / 2)}px`);
+  root.style.setProperty("--ec-ly", `${Math.round(c.top - r.top + c.height / 2)}px`);
+}
+function LightLayers({ mode, remeasureKey }) {
+  const dark = mode === "dark";
+  const overlayRef = useRef3(null);
+  useLayoutEffect2(() => {
+    const root = overlayRef.current?.parentElement;
+    if (!dark || root === null || root === void 0) return void 0;
+    const run = () => measure(root);
+    run();
+    window.addEventListener("resize", run);
+    const ro = typeof ResizeObserver === "function" ? new ResizeObserver(run) : null;
+    ro?.observe(root);
+    return () => {
+      window.removeEventListener("resize", run);
+      ro?.disconnect();
+      root.removeAttribute("data-light");
+    };
+  }, [dark, remeasureKey]);
+  if (!dark) return /* @__PURE__ */ jsx5("div", { className: "ec-daylight", "aria-hidden": "true", "data-testid": "daylight" });
+  return /* @__PURE__ */ jsxs5("div", { ref: overlayRef, className: "ec-light", "aria-hidden": "true", "data-testid": "light-overlay", children: [
+    /* @__PURE__ */ jsx5("div", { className: "ec-light-a ec-flicker", "data-testid": "light-dodge", "data-layer": "a" }),
+    /* @__PURE__ */ jsx5("div", { className: "ec-light-b ec-flicker", "data-testid": "light-wash", "data-layer": "b" })
   ] });
 }
 
@@ -1112,6 +1256,11 @@ function createApi(app) {
   };
 }
 
+// ui/src/lib/theme.ts
+function themeMode(raw) {
+  return typeof raw === "string" && /(^|-)dark$/i.test(raw.trim()) ? "dark" : "light";
+}
+
 // ui/src/styles.ts
 import { createElement as createElement3 } from "react";
 var STYLE_TEXT = `
@@ -1119,6 +1268,14 @@ var STYLE_TEXT = `
 .ec-content { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 16px; padding: 16px; }
 .ec-decor { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
 .ec-decor svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ec-light { position: absolute; inset: 0; z-index: 2; overflow: hidden; pointer-events: none; }
+.ec-light-a, .ec-light-b { position: absolute; inset: 0; }
+.ec-light-a { mix-blend-mode: color-dodge; background: radial-gradient(circle at var(--ec-lx, calc(100% - 48px)) var(--ec-ly, 56px), rgba(255,214,140,.70) 0, rgba(255,196,110,.36) 90px, rgba(255,170,80,.14) 330px, rgba(255,150,60,.05) 620px, rgba(255,150,60,0) 900px); }
+.ec-light-b { mix-blend-mode: screen; background: radial-gradient(circle at var(--ec-lx, calc(100% - 48px)) var(--ec-ly, 56px), rgba(255,170,70,.16) 0, rgba(255,170,70,0) 700px); }
+.ec-root[data-light="off"] .ec-light { display: none; }
+.ec-daylight { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(circle farthest-corner at 0 0, rgba(244,248,255,.35) 0, rgba(244,248,255,0) 100%); }
+.ec-root[data-mode="light"] .ec-card, .ec-root[data-mode="light"] .ec-preview { box-shadow: 3px 4px 10px rgba(30,41,59,.12); }
+.ec-root[data-mode="light"] .ec-fog ellipse { fill: #dbe3ec; fill-opacity: 0.07; }
 .ec-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .ec-shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px 16px; list-style: none; margin: 0; padding: 0; }
 .ec-card { border: 1px solid currentColor; border-radius: 8px; padding: 12px; background: color-mix(in srgb, currentColor 5%, transparent); overflow-wrap: anywhere; }
@@ -1146,9 +1303,11 @@ var STYLE_TEXT = `
 .ec-badge[data-grade="recovered"] { background: #dcfce7; color: #14532d; }
 .ec-badge[data-grade="partial"] { background: #fef3c7; color: #78350f; }
 .ec-badge[data-grade="lost"] { background: #fee2e2; color: #7f1d1d; }
-.ec-root[data-mode="dark"] .ec-badge[data-grade="recovered"] { background: #14532d; color: #bbf7d0; }
-.ec-root[data-mode="dark"] .ec-badge[data-grade="partial"] { background: #78350f; color: #fde68a; }
-.ec-root[data-mode="dark"] .ec-badge[data-grade="lost"] { background: #7f1d1d; color: #fecaca; }
+.ec-root[data-mode="dark"] .ec-badge[data-grade="recovered"] { background: #bbf7d0; color: #03140a; }
+.ec-root[data-mode="dark"] .ec-badge[data-grade="partial"] { background: #fde68a; color: #140a01; }
+.ec-root[data-mode="dark"] .ec-badge[data-grade="lost"] { background: #fecaca; color: #160404; }
+.ec-badge[data-muted="true"] { background: transparent; color: #4b5563; border-color: #6b7280; font-weight: 400; }
+.ec-root[data-mode="dark"] .ec-badge[data-muted="true"] { background: transparent; color: #cbd5e1; border-color: #94a3b8; }
 .ec-badges { display: inline-flex; flex-wrap: wrap; gap: 6px; }
 .ec-diskhead { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; max-width: 100%; overflow-wrap: anywhere; }
 .ec-diskhead .ec-title { font-size: 1.75em; }
@@ -1162,10 +1321,8 @@ li[data-testid="directory"].ec-grave { border-radius: 4px; border-style: solid; 
 .ec-grave-meta { display: block; font-size: 0.85em; }
 .ec-disk-grid { display: flex; flex-direction: column; gap: 16px; }
 .ec-disk-side { min-width: 0; }
-.ec-header { display: flex; align-items: center; gap: 12px; }
-.ec-header-lantern { flex: none; position: relative; display: block; width: 16px; height: 26px; margin: 6px 6px 6px 4px; border-radius: 4px; background: #ffb347; box-shadow: 0 0 12px 2px rgba(255, 179, 71, 0.45); }
-.ec-header-lantern::before { content: ""; position: absolute; left: -2px; right: -2px; top: -5px; height: 4px; border-radius: 2px; background: #6b7280; }
-.ec-header-lantern::after { content: ""; position: absolute; left: -2px; right: -2px; bottom: -5px; height: 4px; border-radius: 2px; background: #6b7280; }
+.ec-header { display: flex; align-items: flex-start; gap: 76px; min-height: 106px; }
+.ec-header-lantern { flex: none; display: block; margin: 0 4px 0 auto; overflow: visible; }
 .ec-title { margin: 0; font-size: 1.5em; line-height: 1.2; }
 .ec-subtitle { margin: 2px 0 0 0; opacity: 0.8; }
 .ec-settings-title { margin: 0; font-size: 1em; }
@@ -1192,10 +1349,10 @@ li[data-testid="directory"].ec-grave { border-radius: 4px; border-style: solid; 
 .ec-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .ec-btn-primary { background: #1d4ed8; color: #ffffff; border-color: #1d4ed8; font-weight: 600; padding: 6px 16px; }
 .ec-btn-primary:hover:not(:disabled) { background: #1e40af; border-color: #1e40af; }
-.ec-root[data-mode="dark"] .ec-btn-primary { background: #93c5fd; color: #0b1220; border-color: #93c5fd; }
+.ec-root[data-mode="dark"] .ec-btn-primary { background: #93c5fd; color: #030712; border-color: #93c5fd; }
 .ec-root[data-mode="dark"] .ec-btn-primary:hover:not(:disabled) { background: #bfdbfe; border-color: #bfdbfe; }
 .ec-btn-secondary { background: color-mix(in srgb, currentColor 6%, transparent); }
-.ec-btn-group { display: inline-flex; flex-wrap: wrap; gap: 6px; padding: 3px 6px; border: 1px dashed currentColor; border-radius: 8px; }
+.ec-btn-group { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 0 6px; }
 .ec-btn-open { font-weight: 600; margin-top: 6px; }
 .ec-disk-facts { margin: 4px 0; font-size: 0.9em; }
 .ec-disk-counts { margin: 6px 0; }
@@ -1208,11 +1365,13 @@ li[data-testid="directory"].ec-grave { border-radius: 4px; border-style: solid; 
   .ec-disk-side .ec-preview { max-height: calc(100vh - 48px); }
 }
 @media (prefers-reduced-motion: no-preference) {
-  @keyframes ec-flicker { 0% { opacity: 0.85; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
+  @keyframes ec-flicker-a { 0% { opacity: 0.96; } 38% { opacity: 1; } 71% { opacity: 0.95; } 100% { opacity: 0.99; } }
+  @keyframes ec-flicker-b { 0% { opacity: 1; } 27% { opacity: 0.95; } 64% { opacity: 0.99; } 100% { opacity: 0.96; } }
   @keyframes ec-drift { 0% { transform: translateX(-3%); } 100% { transform: translateX(3%); } }
   @keyframes ec-rise { 0% { opacity: 0; transform: translateY(4px); } 100% { opacity: 1; transform: none; } }
   .ec-grave, .ec-disk { animation: ec-rise 0.35s ease-out both; }
-  .ec-lantern-glow { animation: ec-flicker 2.4s ease-in-out infinite alternate; }
+  .ec-light-a.ec-flicker { animation: ec-flicker-a 3.7s ease-in-out infinite; }
+  .ec-light-b.ec-flicker { animation: ec-flicker-b 4.9s ease-in-out -1.8s infinite; }
   .ec-fog { animation: ec-drift 18s ease-in-out infinite alternate; }
 }
 `;
@@ -1237,7 +1396,7 @@ function writeViewToUrl(view) {
 }
 
 // ui/src/index.tsx
-import { jsx as jsx4, jsxs as jsxs4 } from "react/jsx-runtime";
+import { jsx as jsx6, jsxs as jsxs6 } from "react/jsx-runtime";
 function ExhumeCrewApp() {
   const app = useAppApi();
   const theme = useTheme();
@@ -1248,16 +1407,17 @@ function ExhumeCrewApp() {
     setView(next);
     writeViewToUrl(next);
   }, []);
-  return /* @__PURE__ */ jsxs4(
+  const mode = themeMode(theme.mode);
+  return /* @__PURE__ */ jsxs6(
     "div",
     {
       className: "ec-root",
-      "data-mode": theme.mode === "dark" ? "dark" : "light",
+      "data-mode": mode,
       "data-accent": theme.accent,
       children: [
-        /* @__PURE__ */ jsx4(StyleElement, {}),
-        /* @__PURE__ */ jsx4(DecorLayer, {}),
-        view.kind === "disk" ? /* @__PURE__ */ jsx4(
+        /* @__PURE__ */ jsx6(StyleElement, {}),
+        /* @__PURE__ */ jsx6(DecorLayer, {}),
+        view.kind === "disk" ? /* @__PURE__ */ jsx6(
           DiskView,
           {
             api,
@@ -1267,16 +1427,18 @@ function ExhumeCrewApp() {
               void chat.openChat({ agent: UNDERTAKER_AGENT, message: buildUndertakerMessage(id) });
             }
           }
-        ) : /* @__PURE__ */ jsx4(
+        ) : /* @__PURE__ */ jsx6(
           LibraryView,
           {
+            mode,
             api,
             onOpenDisk: (id) => go({ kind: "disk", id }),
             onSummarise: (message) => {
               void chat.openChat({ agent: ARCHIVIST_AGENT, message });
             }
           }
-        )
+        ),
+        /* @__PURE__ */ jsx6(LightLayers, { mode, remeasureKey: view.kind })
       ]
     }
   );

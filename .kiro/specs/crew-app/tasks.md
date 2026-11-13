@@ -448,6 +448,43 @@ Standing constraints for every task:
     - Run `npm run build`, then `vitest --run`, `tsc --noEmit`, lint and `npm run check-build`; fix failures minimally without weakening tests; update README/design only where behaviour changed; confirm `mcp/exhume-mcp.mjs` and `mcp/PINNED.md` are unchanged; do not commit; leave task 18 alone
     - _Requirements: 19.13, 20.2, 20.3, 20.4_
 
+- [x] 23. Lantern light and polish (owner request after task 22; do not commit)
+  - [x] 23.1 Draw the lantern as SVG
+    - Replace the current lantern (yellow rounded rectangle with an orange halo, top right) with a code-drawn SVG lantern: handle ring, cap, glass with two thin bars, base; frame in a muted brass stroke
+    - Inside the glass a small hot core (radial gradient #fff7d6 -> #ffd27a -> transparent); it sits top right of the page header, decorative, `aria-hidden`
+    - Edit `ui/src/**` only; note that the Property 32 test forbids `svg` elements in the rendered page for untrusted text, so scope that check to exclude the decor layer or adjust it without weakening what it protects
+    - _Requirements: 13.1, 15.4, 15.5_
+
+  - [x] 23.2 Add the night light overlay (Photoshop colour-dodge technique)
+    - One fixed, full-page, `pointer-events: none`, `aria-hidden` overlay inside the app root; the root gets `isolation: isolate` so it blends only with the app content, never the Crew shell
+    - Layer A, `mix-blend-mode: color-dodge`: radial-gradient centred on the lantern core, rgba(255,214,140,.70) at 0, rgba(255,196,110,.36) at ~90px, rgba(255,170,80,.14) at ~330px, rgba(255,150,60,.05) at ~620px, transparent at ~900px
+    - Layer B, `mix-blend-mode: screen`: faint warm wash, rgba(255,170,70,.16) at 0 -> transparent at ~700px; subtle, no brown cast over the whole page
+    - The centre follows the lantern position on resize through CSS variables, with no layout reads per frame
+    - Contrast: body text and buttons inside the brightest zone stay at least 4.5:1 in dark and light; verify by computing the blended colours for the worst case and report how
+    - Motion: a slow flicker (3 to 5 s, opacity or radius within +/-5%, irregular via two out-of-phase keyframes), off under `prefers-reduced-motion`, no JS animation loop
+    - Remove the old glow and the fog only if they fight the new light; keep the graves/fog look otherwise
+    - Do not use values brighter than those given; they are the approved, toned-down ones
+    - _Requirements: 13.1, 15.3, 15.4, 15.5, 15.6_
+
+  - [x] 23.3 Add the daytime light theme
+    - In light theme the lantern is unlit: glass clear/grey with a faint reflection highlight, no hot core, and the dodge and wash layers are not rendered at all (not just transparent); optionally a thin static wisp of smoke above the cap
+    - Daylight instead: a very soft cool-white light from the top left (one large radial gradient, low alpha, normal or soft-light blend); cards cast a short soft shadow down-right; the fog becomes a pale morning mist (lighter, lower opacity)
+    - Theme switches at runtime (Crew `useTheme` mode / `prefers-color-scheme`) swap night (lit lantern) and day (unlit) without a reload
+    - Same contrast rule: text at least 4.5:1 in both
+    - _Requirements: 15.3, 15.4, 15.5_
+
+  - [x] 23.4 Small polish
+    - Date ranges show dates only (`1990-11-19 to 1991-06-30`) on cards and the disk header; file rows show `1991-06-28 16:45`; exports keep the full ISO value
+    - Count badges with 0 are muted (grey outline, no colour); only non-zero counts get the green/amber/red fill
+    - "Show full summary" / note toggles show only when the text is really clipped (measure `scrollHeight` vs `clientHeight`, re-check on resize), for the disk header, notes and library cards
+    - Group Export CSV / Export Markdown with spacing only, no dashed border
+    - _Requirements: 13.1-13.10, 14.1-14.13_
+
+  - [x] 23.5 Add tests, update design.md, rebuild and run all checks
+    - DOM tests: the light theme renders no dodge/wash layer and an unlit lantern; the dark theme renders both layers; the overlay is `aria-hidden`, `pointer-events: none` and inside an isolated root; the flicker class or animation is absent with reduced motion; date formats, muted zero badges, toggle only when clipped (mock `scrollHeight`/`clientHeight` in happy-dom), no border on the export group
+    - Update `design.md` (UI look section) only; run `npm run build`, then `vitest --run`, `tsc --noEmit`, lint and `npm run check-build`; fix failures minimally without weakening tests; confirm `mcp/exhume-mcp.mjs` and `mcp/PINNED.md` are unchanged; do not commit; leave task 18 alone
+    - _Requirements: 19.13, 20.2, 20.3, 20.4_
+
 ## Notes
 
 - All property-based test sub-tasks are required. `docs/SPEC_BRIEFS.md` only says "Property tests where they fit (store round-trip, CSV export parses back)" and gives no permission to make any of them optional.
@@ -480,7 +517,12 @@ Standing constraints for every task:
     { "id": 18, "tasks": ["22.2"] },
     { "id": 19, "tasks": ["22.3"] },
     { "id": 20, "tasks": ["22.4"] },
-    { "id": 21, "tasks": ["22.6"] }
+    { "id": 21, "tasks": ["22.6"] },
+    { "id": 22, "tasks": ["23.1"] },
+    { "id": 23, "tasks": ["23.2"] },
+    { "id": 24, "tasks": ["23.3"] },
+    { "id": 25, "tasks": ["23.4"] },
+    { "id": 26, "tasks": ["23.5"] }
   ]
 }
 ```

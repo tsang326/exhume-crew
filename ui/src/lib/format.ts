@@ -13,10 +13,33 @@ export function formatBytes(bytes: number): string {
   return `${Math.round((kb / 1024) * 10) / 10} MB`;
 }
 
-/** "first to last", the single date when both match, one side when only one is known, else null. */
+const ISO_DATE = /^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}):(\d{2}))?/;
+
+/** Date part only (`1990-11-19`). Odd values pass through trimmed; empty or non-strings give null. */
+export function formatDateOnly(value: string | null | undefined): string | null {
+  if (typeof value !== "string") return null;
+  const t = value.trim();
+  if (t === "") return null;
+  const m = ISO_DATE.exec(t);
+  return m !== null ? (m[1] ?? t) : t;
+}
+
+/** Date and minutes (`1991-06-28 16:45`); date only when there is no time. Odd values pass through. */
+export function formatDateTime(value: string | null | undefined): string | null {
+  if (typeof value !== "string") return null;
+  const t = value.trim();
+  if (t === "") return null;
+  const m = ISO_DATE.exec(t);
+  if (m === null) return t;
+  return m[2] !== undefined && m[3] !== undefined ? `${m[1]} ${m[2]}:${m[3]}` : (m[1] ?? t);
+}
+
+/** "first to last" as dates only, the single date when both match, one side when only one is known, else null. */
 export function formatDateRange(first: string | null, last: string | null): string | null {
-  if (first !== null && last !== null) return first === last ? first : `${first} to ${last}`;
-  return first ?? last;
+  const a = formatDateOnly(first);
+  const b = formatDateOnly(last);
+  if (a !== null && b !== null) return a === b ? a : `${a} to ${b}`;
+  return a ?? b;
 }
 
 /** Geometry text: the BPB or fallback label, or "unknown geometry". */

@@ -13,6 +13,7 @@ import {
   conversionFor,
   formatBytes,
   formatDateRange,
+  formatDateTime,
   formatFileCount,
   formatGeometry,
 } from "./lib/format";
@@ -67,7 +68,7 @@ export function Grave({
   const conversion = isFile && entry.state !== "lost" ? conversionFor(entry.path) : null;
   const meta = [
     isFile ? formatBytes(entry.size) : "folder",
-    entry.date ?? "no date",
+    formatDateTime(entry.date) ?? "no date",
     ...(conversion !== null ? [`Converts: ${conversion}`] : []),
   ].join(" | ");
   const body = (
