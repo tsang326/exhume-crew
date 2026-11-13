@@ -199,8 +199,13 @@ Result (2026-11-12, partial):
   `kirocrew cron trigger` with no prompts.
 - Reported for step 2: 2 agents and 1 skill are registered, also after `app update`. Both MCP servers start
   (A3). The page was used. A line-by-line list of all five items in step 2 was not reported.
-- Pending: A1b, A4b, A5, A6 (Export CSV and Markdown), A11 (`configSchema` form), A13, reduced-motion, and a
-  measured focus ring contrast check.
+- Checked by hand in Crew 0.12.2 (2026-11-13): A6 holds (Export CSV and Export Markdown both open the save
+  dialog through `raw()`); A11 holds by code search, not by a fresh install (no 0.12.2 dashboard JS file mentions
+  `configSchema`, only `apps/manifest_sections.py` stores it, so no install form can appear; the
+  Settings_Area sets the folder); opening
+  a disk and reloading keeps the disk (`?id=`); every `animation` rule sits inside
+  `prefers-reduced-motion: no-preference`, so reduced motion has no flicker, drift or rise.
+- Pending: A1b, A4b, A5, A13, and a measured focus ring contrast check.
 
 ## Cron: enable, disable and cost
 
