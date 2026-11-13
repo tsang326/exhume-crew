@@ -201,13 +201,14 @@ describe("Feature: crew-app, Property 32: Untrusted text renders literally", () 
           return (
             hasNoInjectedMarkup(c) &&
             sameShape &&
-            (card.querySelector("h3 button")?.textContent ?? "") === t.label &&
+            (card.querySelector("h3")?.textContent ?? "") === t.label &&
+            card.querySelector("button[aria-label]")?.textContent === "Open disk" &&
             c.querySelector('[data-testid="card-summary"]')?.textContent === t.summary &&
             noteItems.length === notes.length &&
             noteItems.every((n, i) => n === notes[i]) &&
             text.includes(t.label) &&
             c.querySelector('[data-testid="card-status"]')?.textContent === "summarised" &&
-            c.querySelector('[data-testid="card-counts"]')?.textContent === "Recovered 1, partial 0, lost 0" &&
+            c.querySelector('[data-testid="card-counts"]')?.textContent === "Recovered 1Partial 0Lost 0" &&
             c.querySelector('[data-testid="card-warnings"]')?.textContent === "Warnings: 0"
           );
         } finally {
@@ -225,7 +226,8 @@ describe("Feature: crew-app, Property 32: Untrusted text renders literally", () 
     await dispose(base);
     await fc.assert(
       fc.asyncProperty(texts, async (t) => {
-        const c = await renderDisk(t, previewOf("text", t.preview, t.summary));
+        // The header now shows notes, so keep their count (and clamp state) equal to the baseline.
+        const c = await renderDisk({ ...t, notes: [NEUTRAL, NEUTRAL] }, previewOf("text", t.preview, t.summary));
         try {
           const pre = c.querySelector('[data-testid="preview-text"]');
           const graves = Array.from(c.querySelectorAll('[data-testid="tombstone"], [data-testid="open-grave"]'));
@@ -235,6 +237,7 @@ describe("Feature: crew-app, Property 32: Untrusted text renders literally", () 
             pre !== null &&
             pre.textContent === t.preview &&
             c.querySelector("h1")?.textContent === t.label &&
+            c.querySelector('[data-testid="disk-summary"]')?.textContent === t.summary &&
             graves.length === 2 &&
             graves.every((g) => (g.textContent ?? "").includes(t.path)) &&
             (c.querySelector('[data-testid="grave-grade"]')?.textContent ?? "").includes(t.reason)

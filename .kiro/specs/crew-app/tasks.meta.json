@@ -1619,6 +1619,115 @@
         "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
         "timestamp": 1794466260497
       }
+    ],
+    "22.1 Make the Markdown export a readable finding aid": [
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794541832440
+      },
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794541855159
+      },
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794542224313
+      }
+    ],
+    "22.2 Show where exhumed files went": [
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794541832732
+      },
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794542228934
+      },
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794542342674
+      }
+    ],
+    "22.3 Rework the disk page layout": [
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794541832851
+      },
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794542348276
+      },
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794542692024
+      }
+    ],
+    "22.4 Rework the library page": [
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794541832945
+      },
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794542699494
+      },
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794542922469
+      }
+    ],
+    "22.5 Update `requirements.md` for five demo images": [
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794541833189
+      },
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794541855242
+      },
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794542224737
+      }
+    ],
+    "22.6 Add DOM tests, rebuild and run all checks": [
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794541833292
+      },
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794542927267
+      },
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794543187899
+      }
+    ],
+    "22. Owner feedback after clicking every control in Crew 0.12.2 (do not commit)": [
+      {
+        "executionId": "bd4619c9-4fa1-445e-b878-317fa6e096aa",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794543187992
+      }
     ]
   }
 }

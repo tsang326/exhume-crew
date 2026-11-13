@@ -411,6 +411,43 @@ Standing constraints for every task:
     - Run `npm run build`, then `vitest --run`, `tsc --noEmit`, lint and `npm run check-build`; fix failures minimally without weakening tests; confirm `mcp/exhume-mcp.mjs` and `mcp/PINNED.md` are unchanged; do not commit; leave task 18 alone
     - _Requirements: 19.13, 20.2, 20.3, 20.4_
 
+- [x] 22. Owner feedback after clicking every control in Crew 0.12.2 (do not commit)
+  - [x] 22.1 Make the Markdown export a readable finding aid
+    - Edit `backend/src/exports.ts` (and `src/shared/csv.ts` only if needed); `GET /api/export/markdown` currently escapes almost every punctuation mark and is a raw field dump
+    - Output `# Exhume Crew catalogue`, then per disk `## <label> (<relPath>)`, one short facts line (size, geometry, files, date range, recovered/partial/lost), warnings as a list, the Summary as a paragraph, Notes as a list, and the full diskId once in small print (code span)
+    - Stay safe for untrusted text: escape only what can start or change Markdown/HTML structure (backslash, backtick, `*`, `_`, `[`, `]`, `<`, `>`, `#`/`-`/`+`/digits+`.` only at line start, `|`), collapse newlines inside a value, keep the existing caps
+    - Update the export tests (including Property 24) and add one where a hostile summary (headings, links, HTML, backticks) stays inert text
+    - _Requirements: 8.2, 8.6, 8.7_
+
+  - [x] 22.2 Show where exhumed files went
+    - "Exhume all recoverable" results show, for each result, source path -> output file (for example `exhumed/README-1.txt`, using the API's `outputPath`) or the failure reason, plus one line saying the files are in `<Library>/exhumed/` with the real library path; results stay visible until the user leaves the disk
+    - Edit `ui/src/**` and UI tests in `src/ui-dom/**`; if the API response lacks what is needed, extend the route and its tests minimally
+    - _Requirements: 14.9, 14.10, 14.11_
+
+  - [x] 22.3 Rework the disk page layout
+    - Header: label as the page heading; facts row (size, geometry, files, date range); recovered/partial/lost as badges; warnings; the archivist Summary (clamped, with Show full) and Notes if present
+    - Each file row: path, size, date, and the conversion it gets (WordStar -> Markdown, dBase -> CSV, PCX -> PNG, text) if the schema already knows it, else just size and date; directories look different (folder mark, not a tombstone) and are not buttons
+    - Grade badges coloured by state (recovered green, partial amber, lost muted red), always with the text too; contrast AA in dark and light
+    - Wide windows (>= 1100 px): list left, preview right, preview sticky; narrower: stacked
+    - _Requirements: 14.1-14.13, 15.1-15.7_
+
+  - [x] 22.4 Rework the library page
+    - Each card is clearly openable (an "Open disk" button and the label), keyboard Tab/Enter kept
+    - Counts as coloured badges like 22.3; add size and date range to each card
+    - Button hierarchy: "Summarise new disks" primary (accent), Export CSV/Markdown grouped as secondary, Rescan secondary
+    - Keep the look (lantern, fog, graves), translucent and code-drawn; respect reduced motion; all untrusted text stays a React text child; one style element; no network; no `any`
+    - _Requirements: 13.1-13.10, 15.1-15.7_
+
+  - [x] 22.5 Update `requirements.md` for five demo images
+    - Glossary Demo_Library (line 59): three Exhume demo disks, the harbor-note injection test disk, and one FreeDOS 1.3 image
+    - R18.1 to R18.4 (lines 357 to 360): five image files and five Disk_Cards, matching the code and the golden test
+    - _Requirements: 18.1-18.4_
+
+  - [x] 22.6 Add DOM tests, rebuild and run all checks
+    - DOM tests for 22.2-22.4 (badges, directory not a button, outputPath shown, hostile names as text); export tests for 22.1
+    - Run `npm run build`, then `vitest --run`, `tsc --noEmit`, lint and `npm run check-build`; fix failures minimally without weakening tests; update README/design only where behaviour changed; confirm `mcp/exhume-mcp.mjs` and `mcp/PINNED.md` are unchanged; do not commit; leave task 18 alone
+    - _Requirements: 19.13, 20.2, 20.3, 20.4_
+
 ## Notes
 
 - All property-based test sub-tasks are required. `docs/SPEC_BRIEFS.md` only says "Property tests where they fit (store round-trip, CSV export parses back)" and gives no permission to make any of them optional.
@@ -438,7 +475,12 @@ Standing constraints for every task:
     { "id": 13, "tasks": ["20.2"] },
     { "id": 14, "tasks": ["21.1"] },
     { "id": 15, "tasks": ["21.2"] },
-    { "id": 16, "tasks": ["21.3"] }
+    { "id": 16, "tasks": ["21.3"] },
+    { "id": 17, "tasks": ["22.1", "22.5"] },
+    { "id": 18, "tasks": ["22.2"] },
+    { "id": 19, "tasks": ["22.3"] },
+    { "id": 20, "tasks": ["22.4"] },
+    { "id": 21, "tasks": ["22.6"] }
   ]
 }
 ```

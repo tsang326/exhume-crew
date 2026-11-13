@@ -1,7 +1,6 @@
 import { describe, it } from "vitest";
 import fc from "fast-check";
 import { toMarkdown } from "./exports";
-import { CSV_COLUMNS } from "../../src/shared/csv";
 import type { DiskCardView } from "../../src/shared/schema";
 
 // Feature: crew-app, Property 24: Markdown export structure
@@ -79,50 +78,52 @@ const cards = fc.array(card, { maxLength: 8 });
 const BAD_CONTROL = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f]/;
 // An escaped pair: backslash followed by one ASCII punctuation character.
 const ESCAPED_PAIR = /\\[!-/:-@[-`{-~]/g;
-const PUNCTUATION = /[!-/:-@[-`{-~]/;
+// Characters that can change inline structure; must all be escaped in untrusted text.
+const INLINE_STRUCTURE = /[\\`*_[\]<>|]/;
+// Text that would begin a block (heading, list, quote, fence, setext underline, indented code).
+const BLOCK_START = /^(\s|[#>+=~-]|\d+[.)](\s|$))/;
 
-/** True when no ASCII punctuation remains once escaped pairs are removed. */
-function fullyEscaped(fragment: string): boolean {
-  return !PUNCTUATION.test(fragment.replace(ESCAPED_PAIR, ""));
+/** True when a single untrusted-text line cannot form inline or block Markdown. */
+function inertText(text: string): boolean {
+  return !INLINE_STRUCTURE.test(text.replace(ESCAPED_PAIR, "")) && !BLOCK_START.test(text) && !text.includes("\n");
 }
 
-/** Checks one section's lines against its card. */
-function sectionOk(lines: string[], c: DiskCardView): boolean {
-  if (lines.length !== 2 + CSV_COLUMNS.length) return false;
-  const heading = lines[0] ?? "";
-  const prefix = "## ";
-  const suffix = ` (${c.diskId.slice(0, 12)})`;
-  if (!heading.startsWith(prefix) || !heading.endsWith(suffix)) return false;
-  const headingText = heading.slice(prefix.length, heading.length - suffix.length);
-  if (!fullyEscaped(headingText)) return false;
-  if (lines[1] !== "") return false;
-  return CSV_COLUMNS.every((column, i) => {
-    const line = lines[2 + i] ?? "";
-    const lead = `- ${column}: `;
-    return line.startsWith(lead) && fullyEscaped(line.slice(lead.length));
+/** Checks one section's blocks (separated by blank lines) against its card. */
+function sectionOk(block: string[], c: DiskCardView): boolean {
+  const [heading, facts, ...rest] = block;
+  if (heading === undefined || facts === undefined) return false;
+  if (!heading.startsWith("## ") || heading.includes("\n")) return false;
+  if (!inertText(heading.slice(3).replace(" (", " ").replace(/\)$/, ""))) return false;
+  if (!/^(\d+ bytes|[\d.]+ (KiB|MiB)) · /.test(facts) || facts.includes("\n")) return false;
+  const last = rest[rest.length - 1] ?? "";
+  if (last !== `<sub>\`${c.diskId}\`</sub>`) return false;
+  return rest.slice(0, -1).every((part) => {
+    const lines = part.split("\n");
+    return lines.every((line, i) => {
+      if ((line === "Warnings:" || line === "Notes:") && i === 0 && lines.length > 1) return true;
+      const body = lines.length > 1 && i > 0 ? (line.startsWith("- ") ? line.slice(2) : null) : line;
+      return body !== null && inertText(body);
+    });
   });
 }
 
 function structureOk(list: DiskCardView[]): boolean {
   const out = toMarkdown(list);
   if (BAD_CONTROL.test(out) || !out.endsWith("\n")) return false;
-  const lines = out.slice(0, -1).split("\n");
-  if (lines[0] !== TITLE) return false;
+  const body = out.slice(0, -1);
+  const blocks = body.split("\n\n");
+  if (blocks[0] !== TITLE) return false;
+  const lines = body.split("\n");
   // Every line that begins with "#" is the title or a section heading (no injected headings).
-  const hashLines = lines.filter((l) => l.startsWith("#"));
-  if (hashLines.length !== 1 + list.length) return false;
+  if (lines.filter((l) => l.startsWith("#")).length !== 1 + list.length) return false;
   if (list.length === 0) return lines.length === 1;
-  // Sections are separated by one blank line, so split on headings in card order.
-  const starts: number[] = [];
-  lines.forEach((l, i) => {
-    if (l.startsWith("## ")) starts.push(i);
-  });
-  if (starts.length !== list.length) return false;
-  return list.every((c, i) => {
-    const from = starts[i] ?? 0;
-    const to = i + 1 < starts.length ? (starts[i + 1] ?? lines.length) - 1 : lines.length;
-    return sectionOk(lines.slice(from, to), c);
-  });
+  const sections: string[][] = [];
+  for (const b of blocks.slice(1)) {
+    if (b.startsWith("## ")) sections.push([b]);
+    else sections[sections.length - 1]?.push(b);
+  }
+  if (sections.length !== list.length) return false;
+  return list.every((c, i) => sectionOk(sections[i] ?? [], c));
 }
 
 describe("Feature: crew-app, Property 24: Markdown export structure", () => {

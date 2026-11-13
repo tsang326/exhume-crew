@@ -6,6 +6,8 @@
 import { useCallback, useEffect, useRef, useState, type ReactElement } from "react";
 import type { DiskCardView, ScanStatus } from "../../src/shared/schema";
 import type { ExhumeApi, LibraryStatus } from "./lib/api";
+import { CountBadges } from "./Badges";
+import { formatBytes, formatDateRange, formatFileCount } from "./lib/format";
 import { buildSummariseMessage, isValidDiskId } from "./lib/messages";
 
 const GENERIC_SAVE_ERROR = "The library folder could not be set.";
@@ -176,17 +178,19 @@ export function Toolbar(props: ToolbarProps): ReactElement {
   const needDisks = scanning || !hasDisks;
   return (
     <div className="ec-row" role="toolbar" aria-label="Library actions">
-      <button className="ec-btn" type="button" disabled={scanning} onClick={onRescan}>
-        Rescan
-      </button>
-      <button className="ec-btn" type="button" disabled={needDisks} onClick={onExportCsv}>
-        Export CSV
-      </button>
-      <button className="ec-btn" type="button" disabled={needDisks} onClick={onExportMarkdown}>
-        Export Markdown
-      </button>
-      <button className="ec-btn" type="button" disabled={needDisks} onClick={onSummarise}>
+      <button className="ec-btn ec-btn-primary" type="button" disabled={needDisks} onClick={onSummarise}>
         Summarise new disks
+      </button>
+      <div className="ec-btn-group" role="group" aria-label="Export" data-testid="export-group">
+        <button className="ec-btn ec-btn-secondary" type="button" disabled={needDisks} onClick={onExportCsv}>
+          Export CSV
+        </button>
+        <button className="ec-btn ec-btn-secondary" type="button" disabled={needDisks} onClick={onExportMarkdown}>
+          Export Markdown
+        </button>
+      </div>
+      <button className="ec-btn ec-btn-secondary" type="button" disabled={scanning} onClick={onRescan}>
+        Rescan
       </button>
     </div>
   );
@@ -233,23 +237,31 @@ export function EmptyState({ disabled, onUseDemo }: { disabled: boolean; onUseDe
 // ------------------------------------------------------------------ Shelf
 
 export function DiskCard({ card, onOpen }: { card: DiskCardView; onOpen: (id: string) => void }): ReactElement {
+  const name = card.label === "" ? "Untitled disk" : card.label;
   return (
     <li className="ec-card ec-disk" data-testid="disk-card">
       <span className="ec-disk-shutter" aria-hidden="true" />
-      <h3 className="ec-disk-label">
-        <button className="ec-btn" type="button" onClick={() => onOpen(card.diskId)}>
-          {card.label === "" ? "Untitled disk" : card.label}
-        </button>
-      </h3>
+      <h3 className="ec-disk-label">{name}</h3>
+      <p className="ec-disk-facts" data-testid="card-facts">
+        {`${formatBytes(card.sizeBytes)} | ${formatFileCount(card.fileCount)} | ${formatDateRange(card.dateFirst, card.dateLast) ?? "no date"}`}
+      </p>
       <p>
         <span className="ec-badge" data-testid="card-status">
           {card.status}
         </span>
       </p>
-      <p data-testid="card-counts">
-        {`Recovered ${card.counts.recovered}, partial ${card.counts.partial}, lost ${card.counts.lost}`}
+      <p className="ec-disk-counts" data-testid="card-counts">
+        <CountBadges counts={card.counts} />
       </p>
       <p data-testid="card-warnings">{`Warnings: ${card.warnings.length}`}</p>
+      <button
+        className="ec-btn ec-btn-secondary ec-btn-open"
+        type="button"
+        aria-label={`Open disk ${name}`}
+        onClick={() => onOpen(card.diskId)}
+      >
+        Open disk
+      </button>
       {card.summary ? (
         <ClampText
           text={card.summary.text}

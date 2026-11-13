@@ -36,7 +36,26 @@ export const STYLE_TEXT = `
 .ec-grave-mark[data-h="1"] { height: 32px; }
 .ec-grave-mark[data-h="2"] { height: 38px; }
 .ec-grave-mark[data-h="3"] { height: 30px; }
-.ec-grave .ec-badge[data-grade] { background: #1f2937; color: #f9fafb; border-color: #1f2937; box-shadow: 0 0 0 1px #9ca3af; padding: 1px 10px; }
+.ec-badge[data-grade] { padding: 1px 10px; font-weight: 600; border-color: currentColor; }
+.ec-badge[data-grade="recovered"] { background: #dcfce7; color: #14532d; }
+.ec-badge[data-grade="partial"] { background: #fef3c7; color: #78350f; }
+.ec-badge[data-grade="lost"] { background: #fee2e2; color: #7f1d1d; }
+.ec-root[data-mode="dark"] .ec-badge[data-grade="recovered"] { background: #14532d; color: #bbf7d0; }
+.ec-root[data-mode="dark"] .ec-badge[data-grade="partial"] { background: #78350f; color: #fde68a; }
+.ec-root[data-mode="dark"] .ec-badge[data-grade="lost"] { background: #7f1d1d; color: #fecaca; }
+.ec-badges { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.ec-diskhead { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; max-width: 100%; overflow-wrap: anywhere; }
+.ec-diskhead .ec-title { font-size: 1.75em; }
+.ec-facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 0; }
+.ec-facts li + li::before { content: "\\00B7"; margin: 0 8px; opacity: 0.6; }
+.ec-warnings { margin: 0; padding-left: 20px; }
+.ec-notes { margin: 4px 0 0 0; padding-left: 20px; }
+.ec-grave-mark[data-shape="folder"] { position: relative; width: 26px; height: 18px; margin-bottom: 12px; border-radius: 2px 6px 2px 2px; background: color-mix(in srgb, currentColor 12%, transparent); }
+.ec-grave-mark[data-shape="folder"]::before { content: ""; position: absolute; left: -2px; top: -7px; width: 11px; height: 5px; border: 2px solid currentColor; border-bottom: 0; border-radius: 3px 3px 0 0; }
+li[data-testid="directory"].ec-grave { border-radius: 4px; border-style: solid; background: color-mix(in srgb, currentColor 3%, transparent); }
+.ec-grave-meta { display: block; font-size: 0.85em; }
+.ec-disk-grid { display: flex; flex-direction: column; gap: 16px; }
+.ec-disk-side { min-width: 0; }
 .ec-header { display: flex; align-items: center; gap: 12px; }
 .ec-header-lantern { flex: none; position: relative; display: block; width: 16px; height: 26px; margin: 6px 6px 6px 4px; border-radius: 4px; background: #ffb347; box-shadow: 0 0 12px 2px rgba(255, 179, 71, 0.45); }
 .ec-header-lantern::before { content: ""; position: absolute; left: -2px; right: -2px; top: -5px; height: 4px; border-radius: 2px; background: #6b7280; }
@@ -65,9 +84,23 @@ export const STYLE_TEXT = `
 .ec-table td { border: 1px solid currentColor; padding: 2px 6px; }
 .ec-btn { border: 1px solid currentColor; border-radius: 6px; padding: 4px 12px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
 .ec-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ec-btn-primary { background: #1d4ed8; color: #ffffff; border-color: #1d4ed8; font-weight: 600; padding: 6px 16px; }
+.ec-btn-primary:hover:not(:disabled) { background: #1e40af; border-color: #1e40af; }
+.ec-root[data-mode="dark"] .ec-btn-primary { background: #93c5fd; color: #0b1220; border-color: #93c5fd; }
+.ec-root[data-mode="dark"] .ec-btn-primary:hover:not(:disabled) { background: #bfdbfe; border-color: #bfdbfe; }
+.ec-btn-secondary { background: color-mix(in srgb, currentColor 6%, transparent); }
+.ec-btn-group { display: inline-flex; flex-wrap: wrap; gap: 6px; padding: 3px 6px; border: 1px dashed currentColor; border-radius: 8px; }
+.ec-btn-open { font-weight: 600; margin-top: 6px; }
+.ec-disk-facts { margin: 4px 0; font-size: 0.9em; }
+.ec-disk-counts { margin: 6px 0; }
 .ec-input { border: 1px solid currentColor; border-radius: 6px; padding: 4px 8px; background: transparent; color: inherit; font: inherit; min-width: 260px; }
 .ec-root :focus-visible { outline: 2px solid var(--accent, #1d4ed8); outline-offset: 2px; }
 .ec-root[data-mode="dark"] :focus-visible { outline-color: var(--accent, #93c5fd); }
+@media (min-width: 1100px) {
+  .ec-disk-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px 24px; align-items: start; }
+  .ec-disk-side { position: sticky; top: 16px; }
+  .ec-disk-side .ec-preview { max-height: calc(100vh - 48px); }
+}
 @media (prefers-reduced-motion: no-preference) {
   @keyframes ec-flicker { 0% { opacity: 0.85; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
   @keyframes ec-drift { 0% { transform: translateX(-3%); } 100% { transform: translateX(3%); } }

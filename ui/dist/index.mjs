@@ -46,7 +46,7 @@ function DecorLayer() {
 }
 
 // ui/src/DiskView.tsx
-import { useEffect as useEffect2, useRef, useState as useState2 } from "react";
+import { useEffect as useEffect3, useRef as useRef2, useState as useState3 } from "react";
 
 // ui/src/PreviewPane.ts
 import { createElement as createElement2, useEffect, useState } from "react";
@@ -395,164 +395,74 @@ function PreviewPane({ api, diskId, entry }) {
   return createElement2("section", { className: "ec-preview", "aria-label": "Preview" }, body);
 }
 
-// ui/src/DiskView.tsx
+// ui/src/Badges.tsx
 import { jsx, jsxs } from "react/jsx-runtime";
-var EXHUME_ALL_TOOLTIP = "Exhumes live files and deleted entries graded recovered.";
-function stoneHeight(index) {
-  return Math.abs(index) % 4;
-}
-function Grave({
-  entry,
-  selected,
-  onSelect,
-  index = 0
+function GradeBadge({
+  grade,
+  text,
+  testId
 }) {
-  const deleted = entry.state !== "alive";
-  const isFile = entry.kind === "file";
-  const label = deleted ? `Open grave: ${entry.path}` : `Tombstone: ${entry.path}`;
-  return /* @__PURE__ */ jsxs(
-    "li",
-    {
-      className: "ec-grave",
-      "data-testid": deleted ? "open-grave" : "tombstone",
-      "data-selected": selected ? "true" : "false",
-      children: [
-        /* @__PURE__ */ jsx(
-          "span",
-          {
-            className: "ec-grave-mark",
-            "aria-hidden": "true",
-            "data-shape": deleted ? "pit" : "stone",
-            "data-h": deleted ? void 0 : String(stoneHeight(index))
-          }
-        ),
-        isFile ? /* @__PURE__ */ jsxs(
-          "button",
-          {
-            className: "ec-grave-btn",
-            type: "button",
-            "aria-pressed": selected,
-            "aria-label": label,
-            onClick: () => onSelect(entry.id),
-            children: [
-              /* @__PURE__ */ jsx("span", { className: "ec-grave-name", children: entry.path }),
-              deleted ? /* @__PURE__ */ jsxs("span", { className: "ec-grave-grade", "data-testid": "grave-grade", children: [
-                /* @__PURE__ */ jsx("span", { className: "ec-badge", "data-grade": entry.state, children: `Grade: ${entry.state}` }),
-                entry.reason !== void 0 ? /* @__PURE__ */ jsx("span", { children: ` ${entry.reason}` }) : null
-              ] }) : null
-            ]
-          }
-        ) : /* @__PURE__ */ jsxs("div", { className: "ec-grave-static", children: [
-          /* @__PURE__ */ jsx("span", { className: "ec-grave-name", children: entry.path }),
-          deleted ? /* @__PURE__ */ jsxs("span", { className: "ec-grave-grade", "data-testid": "grave-grade", children: [
-            /* @__PURE__ */ jsx("span", { className: "ec-badge", "data-grade": entry.state, children: `Grade: ${entry.state}` }),
-            entry.reason !== void 0 ? /* @__PURE__ */ jsx("span", { children: ` ${entry.reason}` }) : null
-          ] }) : null
-        ] })
-      ]
-    }
-  );
+  return /* @__PURE__ */ jsx("span", { className: "ec-badge", "data-grade": grade, "data-testid": testId, children: text });
 }
-function Graveyard({
-  files,
-  selected,
-  onSelect
+function CountBadges({
+  counts
 }) {
-  return /* @__PURE__ */ jsx("ul", { className: "ec-graveyard", "aria-label": "Graveyard", "data-testid": "graveyard", children: files.map((f, i) => /* @__PURE__ */ jsx(Grave, { entry: f, index: i, selected: selected === f.id, onSelect }, f.id)) });
-}
-function NotFound({ onBack }) {
-  return /* @__PURE__ */ jsxs("div", { className: "ec-content", "data-testid": "disk-not-found", children: [
-    /* @__PURE__ */ jsx("button", { className: "ec-btn", type: "button", onClick: onBack, children: "Back to library" }),
-    /* @__PURE__ */ jsx("p", { role: "alert", className: "ec-error", children: "This disk does not exist." })
-  ] });
-}
-function DiskView({ api, diskId, onBack, onAskUndertaker }) {
-  const [load, setLoad] = useState2({ phase: "loading" });
-  const [selected, setSelected] = useState2(null);
-  const [exhume, setExhume] = useState2({ phase: "idle" });
-  const live = useRef(true);
-  useEffect2(() => {
-    live.current = true;
-    return () => {
-      live.current = false;
-    };
-  }, []);
-  useEffect2(() => {
-    let current = true;
-    setLoad({ phase: "loading" });
-    setSelected(null);
-    setExhume({ phase: "idle" });
-    (async () => {
-      try {
-        const list = await api.listDisks();
-        if (!current) return;
-        if (!list.disks.some((d) => d.diskId === diskId)) {
-          setLoad({ phase: "notfound" });
-          return;
-        }
-        const detail2 = await api.getDisk(diskId);
-        if (current) setLoad({ phase: "ready", detail: detail2 });
-      } catch {
-        if (current) setLoad({ phase: "error" });
-      }
-    })();
-    return () => {
-      current = false;
-    };
-  }, [api, diskId]);
-  if (load.phase === "notfound") return /* @__PURE__ */ jsx(NotFound, { onBack });
-  if (load.phase !== "ready") {
-    return /* @__PURE__ */ jsxs("div", { className: "ec-content", "data-testid": "disk-view", children: [
-      /* @__PURE__ */ jsx("button", { className: "ec-btn", type: "button", onClick: onBack, children: "Back to library" }),
-      load.phase === "loading" ? /* @__PURE__ */ jsx("p", { role: "status", children: "Loading disk..." }) : /* @__PURE__ */ jsx("p", { role: "alert", className: "ec-error", children: "The disk could not be loaded." })
-    ] });
-  }
-  const { detail } = load;
-  const running = exhume.phase === "running";
-  const truncated = detail.truncated || detail.card.entriesTruncated;
-  const onExhumeAll = () => {
-    setExhume({ phase: "running" });
-    api.exhumeAll(diskId).then(
-      (r) => {
-        if (live.current) setExhume({ phase: "done", results: r.results });
-      },
-      () => {
-        if (live.current) setExhume({ phase: "error" });
-      }
-    );
-  };
-  const nameFor = (r) => detail.files.find((f) => f.id === r.entry)?.path ?? r.path;
-  return /* @__PURE__ */ jsxs("div", { className: "ec-content", "data-testid": "disk-view", children: [
-    /* @__PURE__ */ jsxs("div", { className: "ec-row", children: [
-      /* @__PURE__ */ jsx("button", { className: "ec-btn", type: "button", onClick: onBack, children: "Back to library" }),
-      /* @__PURE__ */ jsx("h1", { children: detail.card.label === "" ? "Untitled disk" : detail.card.label }),
-      /* @__PURE__ */ jsx("button", { className: "ec-btn", type: "button", onClick: () => onAskUndertaker(diskId), children: "Ask the undertaker" })
-    ] }),
-    truncated ? /* @__PURE__ */ jsx("p", { role: "note", className: "ec-card", "data-testid": "truncation-notice", children: `Showing ${detail.files.length} of ${detail.totalEntries} entries. "Exhume all recoverable" covers only the entries shown.` }) : null,
-    /* @__PURE__ */ jsxs("div", { className: "ec-row", children: [
-      /* @__PURE__ */ jsx(
-        "button",
-        {
-          className: "ec-btn",
-          type: "button",
-          disabled: running,
-          title: EXHUME_ALL_TOOLTIP,
-          "aria-describedby": "ec-exhume-tip",
-          onClick: onExhumeAll,
-          children: "Exhume all recoverable"
-        }
-      ),
-      /* @__PURE__ */ jsx("span", { id: "ec-exhume-tip", className: "ec-muted", children: EXHUME_ALL_TOOLTIP })
-    ] }),
-    exhume.phase === "error" ? /* @__PURE__ */ jsx("p", { role: "alert", className: "ec-error", "data-testid": "exhume-error", children: "The exhume request failed." }) : null,
-    exhume.phase === "done" ? /* @__PURE__ */ jsx("ul", { "aria-label": "Exhume results", "data-testid": "exhume-results", children: exhume.results.map((r, i) => /* @__PURE__ */ jsx("li", { "data-outcome": r.outcome, children: `${nameFor(r)}: ${r.outcome === "exhumed" ? "succeeded" : "failed"}` }, `${r.entry}-${i}`)) }) : null,
-    /* @__PURE__ */ jsx(Graveyard, { files: detail.files, selected, onSelect: setSelected }),
-    /* @__PURE__ */ jsx(PreviewPane, { api, diskId, entry: selected })
+  return /* @__PURE__ */ jsxs("span", { className: "ec-badges", "data-testid": "count-badges", children: [
+    /* @__PURE__ */ jsx(GradeBadge, { grade: "recovered", text: `Recovered ${counts.recovered}` }),
+    /* @__PURE__ */ jsx(GradeBadge, { grade: "partial", text: `Partial ${counts.partial}` }),
+    /* @__PURE__ */ jsx(GradeBadge, { grade: "lost", text: `Lost ${counts.lost}` })
   ] });
 }
 
 // ui/src/LibraryView.tsx
-import { useCallback, useEffect as useEffect3, useRef as useRef2, useState as useState3 } from "react";
+import { useCallback, useEffect as useEffect2, useRef, useState as useState2 } from "react";
+
+// ui/src/lib/format.ts
+function formatBytes(bytes) {
+  if (!Number.isFinite(bytes) || bytes < 0) return "unknown size";
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${kb >= 100 ? Math.round(kb) : Math.round(kb * 10) / 10} KB`;
+  return `${Math.round(kb / 1024 * 10) / 10} MB`;
+}
+function formatDateRange(first, last) {
+  if (first !== null && last !== null) return first === last ? first : `${first} to ${last}`;
+  return first ?? last;
+}
+function formatGeometry(g) {
+  return g.source !== "none" && g.label !== null && g.label !== "" ? g.label : "unknown geometry";
+}
+function formatFileCount(n) {
+  return n === 1 ? "1 file" : `${n} files`;
+}
+function conversionFor(path) {
+  const dot = path.lastIndexOf(".");
+  if (dot < 0) return null;
+  switch (path.slice(dot + 1).toUpperCase()) {
+    case "WS":
+    case "WS4":
+    case "WS5":
+    case "WS6":
+    case "WS7":
+    case "WSD":
+      return "WordStar -> Markdown";
+    case "DBF":
+      return "dBase -> CSV";
+    case "PCX":
+      return "PCX -> PNG";
+    case "TXT":
+    case "BAT":
+    case "ASC":
+    case "LOG":
+    case "NFO":
+    case "DIZ":
+    case "1ST":
+    case "ME":
+      return "text";
+    default:
+      return null;
+  }
+}
 
 // ui/src/lib/messages.ts
 var DISK_ID = /^[0-9a-f]{64}$/;
@@ -599,7 +509,7 @@ function needsClamp(text, lines) {
 }
 function ClampText(props) {
   const { text, lines, testId, className, expandLabel, collapseLabel } = props;
-  const [expanded, setExpanded] = useState3(false);
+  const [expanded, setExpanded] = useState2(false);
   const long = needsClamp(text, lines);
   const clamped = long && !expanded;
   return /* @__PURE__ */ jsxs2(Fragment, { children: [
@@ -627,12 +537,12 @@ function ClampText(props) {
 }
 function SettingsArea(props) {
   const { library, disabled, saveError, demoError, onSave, onUseDemo } = props;
-  const [path, setPath] = useState3("");
+  const [path, setPath] = useState2("");
   const shownPath = library?.path ?? "";
-  useEffect3(() => {
+  useEffect2(() => {
     setPath(shownPath);
   }, [shownPath]);
-  const [userOpen, setUserOpen] = useState3(null);
+  const [userOpen, setUserOpen] = useState2(null);
   const usable = library !== null && library.path !== null && library.error === null;
   const open = userOpen ?? (library !== null && !usable);
   return /* @__PURE__ */ jsxs2("section", { className: "ec-card", "aria-label": "Settings", "data-testid": "settings-area", children: [
@@ -687,10 +597,12 @@ function Toolbar(props) {
   const { scanning, hasDisks, onRescan, onExportCsv, onExportMarkdown, onSummarise } = props;
   const needDisks = scanning || !hasDisks;
   return /* @__PURE__ */ jsxs2("div", { className: "ec-row", role: "toolbar", "aria-label": "Library actions", children: [
-    /* @__PURE__ */ jsx2("button", { className: "ec-btn", type: "button", disabled: scanning, onClick: onRescan, children: "Rescan" }),
-    /* @__PURE__ */ jsx2("button", { className: "ec-btn", type: "button", disabled: needDisks, onClick: onExportCsv, children: "Export CSV" }),
-    /* @__PURE__ */ jsx2("button", { className: "ec-btn", type: "button", disabled: needDisks, onClick: onExportMarkdown, children: "Export Markdown" }),
-    /* @__PURE__ */ jsx2("button", { className: "ec-btn", type: "button", disabled: needDisks, onClick: onSummarise, children: "Summarise new disks" })
+    /* @__PURE__ */ jsx2("button", { className: "ec-btn ec-btn-primary", type: "button", disabled: needDisks, onClick: onSummarise, children: "Summarise new disks" }),
+    /* @__PURE__ */ jsxs2("div", { className: "ec-btn-group", role: "group", "aria-label": "Export", "data-testid": "export-group", children: [
+      /* @__PURE__ */ jsx2("button", { className: "ec-btn ec-btn-secondary", type: "button", disabled: needDisks, onClick: onExportCsv, children: "Export CSV" }),
+      /* @__PURE__ */ jsx2("button", { className: "ec-btn ec-btn-secondary", type: "button", disabled: needDisks, onClick: onExportMarkdown, children: "Export Markdown" })
+    ] }),
+    /* @__PURE__ */ jsx2("button", { className: "ec-btn ec-btn-secondary", type: "button", disabled: scanning, onClick: onRescan, children: "Rescan" })
   ] });
 }
 function ScanProgress({ scan }) {
@@ -711,12 +623,24 @@ function EmptyState({ disabled, onUseDemo }) {
   ] });
 }
 function DiskCard({ card, onOpen }) {
+  const name = card.label === "" ? "Untitled disk" : card.label;
   return /* @__PURE__ */ jsxs2("li", { className: "ec-card ec-disk", "data-testid": "disk-card", children: [
     /* @__PURE__ */ jsx2("span", { className: "ec-disk-shutter", "aria-hidden": "true" }),
-    /* @__PURE__ */ jsx2("h3", { className: "ec-disk-label", children: /* @__PURE__ */ jsx2("button", { className: "ec-btn", type: "button", onClick: () => onOpen(card.diskId), children: card.label === "" ? "Untitled disk" : card.label }) }),
+    /* @__PURE__ */ jsx2("h3", { className: "ec-disk-label", children: name }),
+    /* @__PURE__ */ jsx2("p", { className: "ec-disk-facts", "data-testid": "card-facts", children: `${formatBytes(card.sizeBytes)} | ${formatFileCount(card.fileCount)} | ${formatDateRange(card.dateFirst, card.dateLast) ?? "no date"}` }),
     /* @__PURE__ */ jsx2("p", { children: /* @__PURE__ */ jsx2("span", { className: "ec-badge", "data-testid": "card-status", children: card.status }) }),
-    /* @__PURE__ */ jsx2("p", { "data-testid": "card-counts", children: `Recovered ${card.counts.recovered}, partial ${card.counts.partial}, lost ${card.counts.lost}` }),
+    /* @__PURE__ */ jsx2("p", { className: "ec-disk-counts", "data-testid": "card-counts", children: /* @__PURE__ */ jsx2(CountBadges, { counts: card.counts }) }),
     /* @__PURE__ */ jsx2("p", { "data-testid": "card-warnings", children: `Warnings: ${card.warnings.length}` }),
+    /* @__PURE__ */ jsx2(
+      "button",
+      {
+        className: "ec-btn ec-btn-secondary ec-btn-open",
+        type: "button",
+        "aria-label": `Open disk ${name}`,
+        onClick: () => onOpen(card.diskId),
+        children: "Open disk"
+      }
+    ),
     card.summary ? /* @__PURE__ */ jsx2(
       ClampText,
       {
@@ -742,15 +666,15 @@ function Shelf({ disks, onOpen }) {
   return /* @__PURE__ */ jsx2("ul", { className: "ec-shelf", "aria-label": "Disks", "data-testid": "shelf", children: disks.map((c) => /* @__PURE__ */ jsx2(DiskCard, { card: c, onOpen }, c.diskId)) });
 }
 function LibraryView({ api, onOpenDisk, onSummarise }) {
-  const [library, setLibrary] = useState3(null);
-  const [scan, setScan] = useState3(null);
-  const [disks, setDisks] = useState3(null);
-  const [notice, setNotice] = useState3(null);
-  const [saveError, setSaveError] = useState3(null);
-  const [demoError, setDemoError] = useState3(null);
-  const [busy, setBusy] = useState3(false);
-  const live = useRef2(true);
-  useEffect3(() => {
+  const [library, setLibrary] = useState2(null);
+  const [scan, setScan] = useState2(null);
+  const [disks, setDisks] = useState2(null);
+  const [notice, setNotice] = useState2(null);
+  const [saveError, setSaveError] = useState2(null);
+  const [demoError, setDemoError] = useState2(null);
+  const [busy, setBusy] = useState2(false);
+  const live = useRef(true);
+  useEffect2(() => {
     live.current = true;
     return () => {
       live.current = false;
@@ -771,7 +695,7 @@ function LibraryView({ api, onOpenDisk, onSummarise }) {
     } catch {
     }
   }, [api]);
-  useEffect3(() => {
+  useEffect2(() => {
     api.getLibrary().then(
       (l) => {
         if (live.current) setLibrary(l);
@@ -784,7 +708,7 @@ function LibraryView({ api, onOpenDisk, onSummarise }) {
     void refreshDisks();
   }, [api, refreshDisks, refreshScan]);
   const scanning = scan?.state === "running";
-  useEffect3(() => {
+  useEffect2(() => {
     if (!scanning) return;
     const timer = setInterval(() => {
       api.getScan().then(
@@ -888,6 +812,215 @@ function LibraryView({ api, onOpenDisk, onSummarise }) {
     /* @__PURE__ */ jsx2("div", { role: "status", "data-testid": "notice", children: notice }),
     disks !== null && disks.length === 0 ? /* @__PURE__ */ jsx2(EmptyState, { disabled: busy, onUseDemo }) : null,
     disks !== null && disks.length > 0 ? /* @__PURE__ */ jsx2(Shelf, { disks, onOpen: onOpenDisk }) : null
+  ] });
+}
+
+// ui/src/DiskView.tsx
+import { Fragment as Fragment2, jsx as jsx3, jsxs as jsxs3 } from "react/jsx-runtime";
+var EXHUME_ALL_TOOLTIP = "Exhumes live files and deleted entries graded recovered.";
+function relativeOutput(outputPath) {
+  const norm = outputPath.replace(/\\/g, "/");
+  if (norm.startsWith("exhumed/")) return norm;
+  const at = norm.lastIndexOf("/exhumed/");
+  if (at >= 0) return norm.slice(at + 1);
+  return norm.startsWith("/") || /^[A-Za-z]:\//.test(norm) ? norm.split("/").pop() ?? norm : norm;
+}
+function stoneHeight(index) {
+  return Math.abs(index) % 4;
+}
+function Grave({
+  entry,
+  selected,
+  onSelect,
+  index = 0
+}) {
+  const deleted = entry.state !== "alive";
+  const isFile = entry.kind === "file";
+  const label = deleted ? `Open grave: ${entry.path}` : `Tombstone: ${entry.path}`;
+  const conversion = isFile && entry.state !== "lost" ? conversionFor(entry.path) : null;
+  const meta = [
+    isFile ? formatBytes(entry.size) : "folder",
+    entry.date ?? "no date",
+    ...conversion !== null ? [`Converts: ${conversion}`] : []
+  ].join(" | ");
+  const body = /* @__PURE__ */ jsxs3(Fragment2, { children: [
+    /* @__PURE__ */ jsx3("span", { className: "ec-grave-name", children: entry.path }),
+    /* @__PURE__ */ jsx3("span", { className: "ec-grave-meta ec-muted", "data-testid": "grave-meta", children: meta }),
+    deleted ? /* @__PURE__ */ jsxs3("span", { className: "ec-grave-grade", "data-testid": "grave-grade", children: [
+      /* @__PURE__ */ jsx3(GradeBadge, { grade: entry.state, text: `Grade: ${entry.state}` }),
+      entry.reason !== void 0 ? /* @__PURE__ */ jsx3("span", { children: ` ${entry.reason}` }) : null
+    ] }) : null
+  ] });
+  return /* @__PURE__ */ jsxs3(
+    "li",
+    {
+      className: "ec-grave",
+      "data-testid": isFile ? deleted ? "open-grave" : "tombstone" : "directory",
+      "data-selected": selected ? "true" : "false",
+      children: [
+        /* @__PURE__ */ jsx3(
+          "span",
+          {
+            className: "ec-grave-mark",
+            "aria-hidden": "true",
+            "data-shape": !isFile ? "folder" : deleted ? "pit" : "stone",
+            "data-h": isFile && !deleted ? String(stoneHeight(index)) : void 0
+          }
+        ),
+        isFile ? /* @__PURE__ */ jsx3(
+          "button",
+          {
+            className: "ec-grave-btn",
+            type: "button",
+            "aria-pressed": selected,
+            "aria-label": label,
+            onClick: () => onSelect(entry.id),
+            children: body
+          }
+        ) : /* @__PURE__ */ jsx3("div", { className: "ec-grave-static", children: body })
+      ]
+    }
+  );
+}
+function Graveyard({
+  files,
+  selected,
+  onSelect
+}) {
+  return /* @__PURE__ */ jsx3("ul", { className: "ec-graveyard", "aria-label": "Graveyard", "data-testid": "graveyard", children: files.map((f, i) => /* @__PURE__ */ jsx3(Grave, { entry: f, index: i, selected: selected === f.id, onSelect }, f.id)) });
+}
+function DiskHeader({ card }) {
+  const range = formatDateRange(card.dateFirst, card.dateLast);
+  const facts = [
+    formatBytes(card.sizeBytes),
+    formatGeometry(card.geometry),
+    formatFileCount(card.fileCount),
+    range ?? "no dates"
+  ];
+  return /* @__PURE__ */ jsxs3("header", { className: "ec-diskhead", "data-testid": "disk-header", children: [
+    /* @__PURE__ */ jsx3("h1", { className: "ec-title", "data-testid": "disk-title", children: card.label === "" ? card.relPath : card.label }),
+    card.label !== "" ? /* @__PURE__ */ jsx3("p", { className: "ec-subtitle ec-muted", "data-testid": "disk-relpath", children: card.relPath }) : null,
+    /* @__PURE__ */ jsx3("ul", { className: "ec-facts", "aria-label": "Disk facts", "data-testid": "disk-facts", children: facts.map((f, i) => /* @__PURE__ */ jsx3("li", { children: f }, i)) }),
+    /* @__PURE__ */ jsx3(CountBadges, { counts: card.counts }),
+    card.warnings.length > 0 ? /* @__PURE__ */ jsx3("ul", { className: "ec-warnings", "aria-label": "Warnings", "data-testid": "disk-warnings", children: card.warnings.map((w, i) => /* @__PURE__ */ jsx3("li", { children: w.message }, i)) }) : null,
+    card.summary ? /* @__PURE__ */ jsx3(
+      ClampText,
+      {
+        text: card.summary.text,
+        lines: 4,
+        testId: "disk-summary",
+        expandLabel: "Show full summary",
+        collapseLabel: "Show less"
+      }
+    ) : /* @__PURE__ */ jsx3("p", { className: "ec-muted", "data-testid": "disk-summary", children: "No summary yet" }),
+    card.notes.length > 0 ? /* @__PURE__ */ jsxs3("section", { "aria-label": "Notes", "data-testid": "disk-notes", children: [
+      /* @__PURE__ */ jsx3("h2", { className: "ec-settings-title", children: "Notes" }),
+      /* @__PURE__ */ jsx3("ul", { className: "ec-notes", children: card.notes.map((n) => /* @__PURE__ */ jsx3("li", { children: /* @__PURE__ */ jsx3(ClampText, { text: n.text, lines: 2, expandLabel: "Show full note", collapseLabel: "Show less" }) }, n.id)) })
+    ] }) : null
+  ] });
+}
+function NotFound({ onBack }) {
+  return /* @__PURE__ */ jsxs3("div", { className: "ec-content", "data-testid": "disk-not-found", children: [
+    /* @__PURE__ */ jsx3("button", { className: "ec-btn", type: "button", onClick: onBack, children: "Back to library" }),
+    /* @__PURE__ */ jsx3("p", { role: "alert", className: "ec-error", children: "This disk does not exist." })
+  ] });
+}
+function DiskView({ api, diskId, onBack, onAskUndertaker }) {
+  const [load, setLoad] = useState3({ phase: "loading" });
+  const [selected, setSelected] = useState3(null);
+  const [exhume, setExhume] = useState3({ phase: "idle" });
+  const [libraryPath, setLibraryPath] = useState3(null);
+  const live = useRef2(true);
+  useEffect3(() => {
+    api.getLibrary().then(
+      (l) => {
+        if (live.current) setLibraryPath(l.path);
+      },
+      () => void 0
+    );
+  }, [api]);
+  useEffect3(() => {
+    live.current = true;
+    return () => {
+      live.current = false;
+    };
+  }, []);
+  useEffect3(() => {
+    let current = true;
+    setLoad({ phase: "loading" });
+    setSelected(null);
+    setExhume({ phase: "idle" });
+    (async () => {
+      try {
+        const list = await api.listDisks();
+        if (!current) return;
+        if (!list.disks.some((d) => d.diskId === diskId)) {
+          setLoad({ phase: "notfound" });
+          return;
+        }
+        const detail2 = await api.getDisk(diskId);
+        if (current) setLoad({ phase: "ready", detail: detail2 });
+      } catch {
+        if (current) setLoad({ phase: "error" });
+      }
+    })();
+    return () => {
+      current = false;
+    };
+  }, [api, diskId]);
+  if (load.phase === "notfound") return /* @__PURE__ */ jsx3(NotFound, { onBack });
+  if (load.phase !== "ready") {
+    return /* @__PURE__ */ jsxs3("div", { className: "ec-content", "data-testid": "disk-view", children: [
+      /* @__PURE__ */ jsx3("button", { className: "ec-btn", type: "button", onClick: onBack, children: "Back to library" }),
+      load.phase === "loading" ? /* @__PURE__ */ jsx3("p", { role: "status", children: "Loading disk..." }) : /* @__PURE__ */ jsx3("p", { role: "alert", className: "ec-error", children: "The disk could not be loaded." })
+    ] });
+  }
+  const { detail } = load;
+  const running = exhume.phase === "running";
+  const truncated = detail.truncated || detail.card.entriesTruncated;
+  const onExhumeAll = () => {
+    setExhume({ phase: "running" });
+    api.exhumeAll(diskId).then(
+      (r) => {
+        if (live.current) setExhume({ phase: "done", results: r.results });
+      },
+      () => {
+        if (live.current) setExhume({ phase: "error" });
+      }
+    );
+  };
+  const nameFor = (r) => detail.files.find((f) => f.id === r.entry)?.path ?? r.path;
+  return /* @__PURE__ */ jsxs3("div", { className: "ec-content", "data-testid": "disk-view", children: [
+    /* @__PURE__ */ jsxs3("div", { className: "ec-row", children: [
+      /* @__PURE__ */ jsx3("button", { className: "ec-btn", type: "button", onClick: onBack, children: "Back to library" }),
+      /* @__PURE__ */ jsx3("button", { className: "ec-btn", type: "button", onClick: () => onAskUndertaker(diskId), children: "Ask the undertaker" })
+    ] }),
+    /* @__PURE__ */ jsx3(DiskHeader, { card: detail.card }),
+    truncated ? /* @__PURE__ */ jsx3("p", { role: "note", className: "ec-card", "data-testid": "truncation-notice", children: `Showing ${detail.files.length} of ${detail.totalEntries} entries. "Exhume all recoverable" covers only the entries shown.` }) : null,
+    /* @__PURE__ */ jsxs3("div", { className: "ec-row", children: [
+      /* @__PURE__ */ jsx3(
+        "button",
+        {
+          className: "ec-btn",
+          type: "button",
+          disabled: running,
+          title: EXHUME_ALL_TOOLTIP,
+          "aria-describedby": "ec-exhume-tip",
+          onClick: onExhumeAll,
+          children: "Exhume all recoverable"
+        }
+      ),
+      /* @__PURE__ */ jsx3("span", { id: "ec-exhume-tip", className: "ec-muted", children: EXHUME_ALL_TOOLTIP })
+    ] }),
+    exhume.phase === "error" ? /* @__PURE__ */ jsx3("p", { role: "alert", className: "ec-error", "data-testid": "exhume-error", children: "The exhume request failed." }) : null,
+    exhume.phase === "done" ? /* @__PURE__ */ jsxs3("div", { children: [
+      /* @__PURE__ */ jsx3("ul", { "aria-label": "Exhume results", "data-testid": "exhume-results", children: exhume.results.map((r, i) => /* @__PURE__ */ jsx3("li", { "data-outcome": r.outcome, children: r.outcome === "exhumed" && r.outputPath !== void 0 ? `${nameFor(r)} -> ${relativeOutput(r.outputPath)}` : r.outcome === "exhumed" ? `${nameFor(r)}: succeeded` : `${nameFor(r)}: failed${r.errorCode !== void 0 ? ` (${r.errorCode})` : ""}` }, `${r.entry}-${i}`)) }),
+      /* @__PURE__ */ jsx3("p", { className: "ec-muted", "data-testid": "exhume-location", children: libraryPath !== null ? `Exhumed files are in ${libraryPath.replace(/[\\/]+$/, "")}/exhumed/` : "Exhumed files are in the library's exhumed/ folder." })
+    ] }) : null,
+    /* @__PURE__ */ jsxs3("div", { className: "ec-disk-grid", "data-testid": "disk-grid", children: [
+      /* @__PURE__ */ jsx3(Graveyard, { files: detail.files, selected, onSelect: setSelected }),
+      /* @__PURE__ */ jsx3("div", { className: "ec-disk-side", "data-testid": "preview-column", children: /* @__PURE__ */ jsx3(PreviewPane, { api, diskId, entry: selected }) })
+    ] })
   ] });
 }
 
@@ -1009,7 +1142,26 @@ var STYLE_TEXT = `
 .ec-grave-mark[data-h="1"] { height: 32px; }
 .ec-grave-mark[data-h="2"] { height: 38px; }
 .ec-grave-mark[data-h="3"] { height: 30px; }
-.ec-grave .ec-badge[data-grade] { background: #1f2937; color: #f9fafb; border-color: #1f2937; box-shadow: 0 0 0 1px #9ca3af; padding: 1px 10px; }
+.ec-badge[data-grade] { padding: 1px 10px; font-weight: 600; border-color: currentColor; }
+.ec-badge[data-grade="recovered"] { background: #dcfce7; color: #14532d; }
+.ec-badge[data-grade="partial"] { background: #fef3c7; color: #78350f; }
+.ec-badge[data-grade="lost"] { background: #fee2e2; color: #7f1d1d; }
+.ec-root[data-mode="dark"] .ec-badge[data-grade="recovered"] { background: #14532d; color: #bbf7d0; }
+.ec-root[data-mode="dark"] .ec-badge[data-grade="partial"] { background: #78350f; color: #fde68a; }
+.ec-root[data-mode="dark"] .ec-badge[data-grade="lost"] { background: #7f1d1d; color: #fecaca; }
+.ec-badges { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.ec-diskhead { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; max-width: 100%; overflow-wrap: anywhere; }
+.ec-diskhead .ec-title { font-size: 1.75em; }
+.ec-facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 0; }
+.ec-facts li + li::before { content: "\\00B7"; margin: 0 8px; opacity: 0.6; }
+.ec-warnings { margin: 0; padding-left: 20px; }
+.ec-notes { margin: 4px 0 0 0; padding-left: 20px; }
+.ec-grave-mark[data-shape="folder"] { position: relative; width: 26px; height: 18px; margin-bottom: 12px; border-radius: 2px 6px 2px 2px; background: color-mix(in srgb, currentColor 12%, transparent); }
+.ec-grave-mark[data-shape="folder"]::before { content: ""; position: absolute; left: -2px; top: -7px; width: 11px; height: 5px; border: 2px solid currentColor; border-bottom: 0; border-radius: 3px 3px 0 0; }
+li[data-testid="directory"].ec-grave { border-radius: 4px; border-style: solid; background: color-mix(in srgb, currentColor 3%, transparent); }
+.ec-grave-meta { display: block; font-size: 0.85em; }
+.ec-disk-grid { display: flex; flex-direction: column; gap: 16px; }
+.ec-disk-side { min-width: 0; }
 .ec-header { display: flex; align-items: center; gap: 12px; }
 .ec-header-lantern { flex: none; position: relative; display: block; width: 16px; height: 26px; margin: 6px 6px 6px 4px; border-radius: 4px; background: #ffb347; box-shadow: 0 0 12px 2px rgba(255, 179, 71, 0.45); }
 .ec-header-lantern::before { content: ""; position: absolute; left: -2px; right: -2px; top: -5px; height: 4px; border-radius: 2px; background: #6b7280; }
@@ -1038,9 +1190,23 @@ var STYLE_TEXT = `
 .ec-table td { border: 1px solid currentColor; padding: 2px 6px; }
 .ec-btn { border: 1px solid currentColor; border-radius: 6px; padding: 4px 12px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
 .ec-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ec-btn-primary { background: #1d4ed8; color: #ffffff; border-color: #1d4ed8; font-weight: 600; padding: 6px 16px; }
+.ec-btn-primary:hover:not(:disabled) { background: #1e40af; border-color: #1e40af; }
+.ec-root[data-mode="dark"] .ec-btn-primary { background: #93c5fd; color: #0b1220; border-color: #93c5fd; }
+.ec-root[data-mode="dark"] .ec-btn-primary:hover:not(:disabled) { background: #bfdbfe; border-color: #bfdbfe; }
+.ec-btn-secondary { background: color-mix(in srgb, currentColor 6%, transparent); }
+.ec-btn-group { display: inline-flex; flex-wrap: wrap; gap: 6px; padding: 3px 6px; border: 1px dashed currentColor; border-radius: 8px; }
+.ec-btn-open { font-weight: 600; margin-top: 6px; }
+.ec-disk-facts { margin: 4px 0; font-size: 0.9em; }
+.ec-disk-counts { margin: 6px 0; }
 .ec-input { border: 1px solid currentColor; border-radius: 6px; padding: 4px 8px; background: transparent; color: inherit; font: inherit; min-width: 260px; }
 .ec-root :focus-visible { outline: 2px solid var(--accent, #1d4ed8); outline-offset: 2px; }
 .ec-root[data-mode="dark"] :focus-visible { outline-color: var(--accent, #93c5fd); }
+@media (min-width: 1100px) {
+  .ec-disk-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px 24px; align-items: start; }
+  .ec-disk-side { position: sticky; top: 16px; }
+  .ec-disk-side .ec-preview { max-height: calc(100vh - 48px); }
+}
 @media (prefers-reduced-motion: no-preference) {
   @keyframes ec-flicker { 0% { opacity: 0.85; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
   @keyframes ec-drift { 0% { transform: translateX(-3%); } 100% { transform: translateX(3%); } }
@@ -1071,7 +1237,7 @@ function writeViewToUrl(view) {
 }
 
 // ui/src/index.tsx
-import { jsx as jsx3, jsxs as jsxs3 } from "react/jsx-runtime";
+import { jsx as jsx4, jsxs as jsxs4 } from "react/jsx-runtime";
 function ExhumeCrewApp() {
   const app = useAppApi();
   const theme = useTheme();
@@ -1082,16 +1248,16 @@ function ExhumeCrewApp() {
     setView(next);
     writeViewToUrl(next);
   }, []);
-  return /* @__PURE__ */ jsxs3(
+  return /* @__PURE__ */ jsxs4(
     "div",
     {
       className: "ec-root",
       "data-mode": theme.mode === "dark" ? "dark" : "light",
       "data-accent": theme.accent,
       children: [
-        /* @__PURE__ */ jsx3(StyleElement, {}),
-        /* @__PURE__ */ jsx3(DecorLayer, {}),
-        view.kind === "disk" ? /* @__PURE__ */ jsx3(
+        /* @__PURE__ */ jsx4(StyleElement, {}),
+        /* @__PURE__ */ jsx4(DecorLayer, {}),
+        view.kind === "disk" ? /* @__PURE__ */ jsx4(
           DiskView,
           {
             api,
@@ -1101,7 +1267,7 @@ function ExhumeCrewApp() {
               void chat.openChat({ agent: UNDERTAKER_AGENT, message: buildUndertakerMessage(id) });
             }
           }
-        ) : /* @__PURE__ */ jsx3(
+        ) : /* @__PURE__ */ jsx4(
           LibraryView,
           {
             api,

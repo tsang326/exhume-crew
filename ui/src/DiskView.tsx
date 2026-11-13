@@ -4,9 +4,18 @@
  * Untrusted text (labels, file names, reasons) is only ever a React text child.
  */
 import { useEffect, useRef, useState, type ReactElement } from "react";
-import type { FileEntry } from "../../src/shared/schema";
+import type { DiskCardView, FileEntry } from "../../src/shared/schema";
 import type { DiskDetail, ExhumeApi, ExhumeOutcome } from "./lib/api";
 import { PreviewPane } from "./PreviewPane";
+import { CountBadges, GradeBadge } from "./Badges";
+import { ClampText } from "./LibraryView";
+import {
+  conversionFor,
+  formatBytes,
+  formatDateRange,
+  formatFileCount,
+  formatGeometry,
+} from "./lib/format";
 
 export const EXHUME_ALL_TOOLTIP =
   "Exhumes live files and deleted entries graded recovered.";
@@ -22,6 +31,18 @@ type ExhumeState =
   | { phase: "running" }
   | { phase: "error" }
   | { phase: "done"; results: ExhumeOutcome[] };
+
+/**
+ * Display form of an output path: `exhumed/<name>` onward. The API returns the relative form;
+ * if an absolute path ever arrives, only the part after the exhumed folder is shown.
+ */
+export function relativeOutput(outputPath: string): string {
+  const norm = outputPath.replace(/\\/g, "/");
+  if (norm.startsWith("exhumed/")) return norm;
+  const at = norm.lastIndexOf("/exhumed/");
+  if (at >= 0) return norm.slice(at + 1);
+  return norm.startsWith("/") || /^[A-Za-z]:\//.test(norm) ? (norm.split("/").pop() ?? norm) : norm;
+}
 
 /** Deterministic stone height step (0 to 3) from the entry index; CSS maps it to 26, 32, 38, 30 px. */
 export function stoneHeight(index: number): number {
@@ -42,17 +63,38 @@ export function Grave({
   const deleted = entry.state !== "alive";
   const isFile = entry.kind === "file";
   const label = deleted ? `Open grave: ${entry.path}` : `Tombstone: ${entry.path}`;
+  // One text child: size, date and (files that can be read) the conversion Exhume applies.
+  const conversion = isFile && entry.state !== "lost" ? conversionFor(entry.path) : null;
+  const meta = [
+    isFile ? formatBytes(entry.size) : "folder",
+    entry.date ?? "no date",
+    ...(conversion !== null ? [`Converts: ${conversion}`] : []),
+  ].join(" | ");
+  const body = (
+    <>
+      <span className="ec-grave-name">{entry.path}</span>
+      <span className="ec-grave-meta ec-muted" data-testid="grave-meta">
+        {meta}
+      </span>
+      {deleted ? (
+        <span className="ec-grave-grade" data-testid="grave-grade">
+          <GradeBadge grade={entry.state} text={`Grade: ${entry.state}`} />
+          {entry.reason !== undefined ? <span>{` ${entry.reason}`}</span> : null}
+        </span>
+      ) : null}
+    </>
+  );
   return (
     <li
       className="ec-grave"
-      data-testid={deleted ? "open-grave" : "tombstone"}
+      data-testid={isFile ? (deleted ? "open-grave" : "tombstone") : "directory"}
       data-selected={selected ? "true" : "false"}
     >
       <span
         className="ec-grave-mark"
         aria-hidden="true"
-        data-shape={deleted ? "pit" : "stone"}
-        data-h={deleted ? undefined : String(stoneHeight(index))}
+        data-shape={!isFile ? "folder" : deleted ? "pit" : "stone"}
+        data-h={isFile && !deleted ? String(stoneHeight(index)) : undefined}
       />
       {isFile ? (
         <button
@@ -62,24 +104,10 @@ export function Grave({
           aria-label={label}
           onClick={() => onSelect(entry.id)}
         >
-          <span className="ec-grave-name">{entry.path}</span>
-          {deleted ? (
-            <span className="ec-grave-grade" data-testid="grave-grade">
-              <span className="ec-badge" data-grade={entry.state}>{`Grade: ${entry.state}`}</span>
-              {entry.reason !== undefined ? <span>{` ${entry.reason}`}</span> : null}
-            </span>
-          ) : null}
+          {body}
         </button>
       ) : (
-        <div className="ec-grave-static">
-          <span className="ec-grave-name">{entry.path}</span>
-          {deleted ? (
-            <span className="ec-grave-grade" data-testid="grave-grade">
-              <span className="ec-badge" data-grade={entry.state}>{`Grade: ${entry.state}`}</span>
-              {entry.reason !== undefined ? <span>{` ${entry.reason}`}</span> : null}
-            </span>
-          ) : null}
-        </div>
+        <div className="ec-grave-static">{body}</div>
       )}
     </li>
   );
@@ -100,6 +128,67 @@ export function Graveyard({
         <Grave key={f.id} entry={f} index={i} selected={selected === f.id} onSelect={onSelect} />
       ))}
     </ul>
+  );
+}
+
+/** Page heading, facts row, grade badges, warnings, Summary and Notes of one disk. */
+export function DiskHeader({ card }: { card: DiskCardView }): ReactElement {
+  const range = formatDateRange(card.dateFirst, card.dateLast);
+  const facts = [
+    formatBytes(card.sizeBytes),
+    formatGeometry(card.geometry),
+    formatFileCount(card.fileCount),
+    range ?? "no dates",
+  ];
+  return (
+    <header className="ec-diskhead" data-testid="disk-header">
+      <h1 className="ec-title" data-testid="disk-title">
+        {card.label === "" ? card.relPath : card.label}
+      </h1>
+      {card.label !== "" ? (
+        <p className="ec-subtitle ec-muted" data-testid="disk-relpath">
+          {card.relPath}
+        </p>
+      ) : null}
+      <ul className="ec-facts" aria-label="Disk facts" data-testid="disk-facts">
+        {facts.map((f, i) => (
+          <li key={i}>{f}</li>
+        ))}
+      </ul>
+      <CountBadges counts={card.counts} />
+      {card.warnings.length > 0 ? (
+        <ul className="ec-warnings" aria-label="Warnings" data-testid="disk-warnings">
+          {card.warnings.map((w, i) => (
+            <li key={i}>{w.message}</li>
+          ))}
+        </ul>
+      ) : null}
+      {card.summary ? (
+        <ClampText
+          text={card.summary.text}
+          lines={4}
+          testId="disk-summary"
+          expandLabel="Show full summary"
+          collapseLabel="Show less"
+        />
+      ) : (
+        <p className="ec-muted" data-testid="disk-summary">
+          No summary yet
+        </p>
+      )}
+      {card.notes.length > 0 ? (
+        <section aria-label="Notes" data-testid="disk-notes">
+          <h2 className="ec-settings-title">Notes</h2>
+          <ul className="ec-notes">
+            {card.notes.map((n) => (
+              <li key={n.id}>
+                <ClampText text={n.text} lines={2} expandLabel="Show full note" collapseLabel="Show less" />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+    </header>
   );
 }
 
@@ -128,7 +217,17 @@ export function DiskView({ api, diskId, onBack, onAskUndertaker }: DiskViewProps
   const [load, setLoad] = useState<Load>({ phase: "loading" });
   const [selected, setSelected] = useState<number | null>(null);
   const [exhume, setExhume] = useState<ExhumeState>({ phase: "idle" });
+  const [libraryPath, setLibraryPath] = useState<string | null>(null);
   const live = useRef(true);
+
+  useEffect(() => {
+    api.getLibrary().then(
+      (l) => {
+        if (live.current) setLibraryPath(l.path);
+      },
+      () => undefined,
+    );
+  }, [api]);
 
   useEffect(() => {
     live.current = true;
@@ -205,11 +304,12 @@ export function DiskView({ api, diskId, onBack, onAskUndertaker }: DiskViewProps
         <button className="ec-btn" type="button" onClick={onBack}>
           Back to library
         </button>
-        <h1>{detail.card.label === "" ? "Untitled disk" : detail.card.label}</h1>
         <button className="ec-btn" type="button" onClick={() => onAskUndertaker(diskId)}>
           Ask the undertaker
         </button>
       </div>
+
+      <DiskHeader card={detail.card} />
 
       {truncated ? (
         <p role="note" className="ec-card" data-testid="truncation-notice">
@@ -239,17 +339,32 @@ export function DiskView({ api, diskId, onBack, onAskUndertaker }: DiskViewProps
         </p>
       ) : null}
       {exhume.phase === "done" ? (
-        <ul aria-label="Exhume results" data-testid="exhume-results">
-          {exhume.results.map((r, i) => (
-            <li key={`${r.entry}-${i}`} data-outcome={r.outcome}>
-              {`${nameFor(r)}: ${r.outcome === "exhumed" ? "succeeded" : "failed"}`}
-            </li>
-          ))}
-        </ul>
+        <div>
+          <ul aria-label="Exhume results" data-testid="exhume-results">
+            {exhume.results.map((r, i) => (
+              <li key={`${r.entry}-${i}`} data-outcome={r.outcome}>
+                {r.outcome === "exhumed" && r.outputPath !== undefined
+                  ? `${nameFor(r)} -> ${relativeOutput(r.outputPath)}`
+                  : r.outcome === "exhumed"
+                    ? `${nameFor(r)}: succeeded`
+                    : `${nameFor(r)}: failed${r.errorCode !== undefined ? ` (${r.errorCode})` : ""}`}
+              </li>
+            ))}
+          </ul>
+          <p className="ec-muted" data-testid="exhume-location">
+            {libraryPath !== null
+              ? `Exhumed files are in ${libraryPath.replace(/[\\/]+$/, "")}/exhumed/`
+              : "Exhumed files are in the library's exhumed/ folder."}
+          </p>
+        </div>
       ) : null}
 
-      <Graveyard files={detail.files} selected={selected} onSelect={setSelected} />
-      <PreviewPane api={api} diskId={diskId} entry={selected} />
+      <div className="ec-disk-grid" data-testid="disk-grid">
+        <Graveyard files={detail.files} selected={selected} onSelect={setSelected} />
+        <div className="ec-disk-side" data-testid="preview-column">
+          <PreviewPane api={api} diskId={diskId} entry={selected} />
+        </div>
+      </div>
     </div>
   );
 }

@@ -1439,16 +1439,40 @@ function buildCsv(cards) {
 // backend/src/exports.ts
 var MARKDOWN_TITLE = "# Exhume Crew catalogue";
 function escapeMarkdown(value) {
-  return displayName(value).replace(/[!-/:-@[-`{-~]/g, "\\$&");
+  const flat = displayName(value).trim();
+  return flat.replace(/[\\`*_[\]<>|]/g, "\\$&").replace(/^([-+#=~])/, "\\$1").replace(/^(\d+)([.)])/, "$1\\$2");
+}
+function formatSize(bytes) {
+  if (bytes < 1024) return `${bytes} bytes`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
+}
+function factsLine(card) {
+  const facts = [formatSize(card.sizeBytes)];
+  const geometry = card.geometry.label ?? "";
+  facts.push(`geometry ${escapeMarkdown(geometry !== "" ? geometry : card.geometry.source)}`);
+  facts.push(`${card.fileCount} files`);
+  const first = card.dateFirst === null ? "" : escapeMarkdown(card.dateFirst);
+  const last = card.dateLast === null ? "" : escapeMarkdown(card.dateLast);
+  if (first !== "" && last !== "" && first !== last) facts.push(`${first} to ${last}`);
+  else if (first !== "" || last !== "") facts.push(first !== "" ? first : last);
+  const c = card.counts;
+  facts.push(`${c.recovered} recovered, ${c.partial} partial, ${c.lost} lost`);
+  return facts.join(" · ");
 }
 function markdownSection(card) {
-  const values = cardValues(card);
-  const heading = escapeMarkdown(card.label !== "" ? card.label : card.relPath);
-  const lines = [`## ${heading} (${card.diskId.slice(0, 12)})`, ""];
-  CSV_COLUMNS.forEach((column, i) => {
-    lines.push(`- ${column}: ${escapeMarkdown(values[i] ?? "")}`);
-  });
-  return lines.join("\n");
+  const label = escapeMarkdown(card.label);
+  const relPath = escapeMarkdown(card.relPath);
+  const heading = label === "" ? relPath : relPath === "" || relPath === label ? label : `${label} (${relPath})`;
+  const blocks = [`## ${heading}`, factsLine(card)];
+  const warnings = card.warnings.map((w) => escapeMarkdown(`${w.code}: ${w.message}`)).filter((w) => w !== "");
+  if (warnings.length > 0) blocks.push(["Warnings:", ...warnings.map((w) => `- ${w}`)].join("\n"));
+  const summary = escapeMarkdown(card.summary?.text ?? "");
+  if (summary !== "") blocks.push(summary);
+  const notes = card.notes.map((n) => escapeMarkdown(n.text)).filter((n) => n !== "");
+  if (notes.length > 0) blocks.push(["Notes:", ...notes.map((n) => `- ${n}`)].join("\n"));
+  blocks.push(`<sub>\`${card.diskId.replace(/[^0-9a-zA-Z]/g, "")}\`</sub>`);
+  return blocks.join("\n\n");
 }
 function toCsv(cards) {
   try {

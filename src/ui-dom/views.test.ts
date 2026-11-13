@@ -13,6 +13,7 @@ import { EXHUME_ALL_TOOLTIP, DiskView } from "../../ui/src/DiskView";
 import { LibraryView } from "../../ui/src/LibraryView";
 import { STYLE_TEXT } from "../../ui/src/styles";
 import { SUMMARISE_PREFIX } from "../../ui/src/lib/messages";
+import { conversionFor, formatBytes, formatDateRange } from "../../ui/src/lib/format";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -298,6 +299,79 @@ describe("Header and settings", () => {
   });
 });
 
+describe("Library cards and toolbar (task 22.4)", () => {
+  const rich = (over: Partial<DiskCardView> = {}): DiskCardView => ({
+    ...card(ID_A, false),
+    label: "WRITERS",
+    sizeBytes: 1474560,
+    fileCount: 3,
+    dateFirst: "1991-02-01",
+    dateLast: "1992-03-04",
+    counts: { alive: 1, recovered: 2, partial: 1, lost: 0 },
+    ...over,
+  });
+  const mountCards = async (cards: DiskCardView[], onOpenDisk = vi.fn()): Promise<void> => {
+    const api = fakeApi({ listDisks: () => Promise.resolve({ disks: cards }) });
+    await mount(createElement(LibraryView, { api, onOpenDisk, onSummarise: vi.fn() }));
+  };
+
+  it("has an Open disk button that opens the disk on click and on keyboard activation", async () => {
+    const onOpen = vi.fn();
+    await mountCards([rich()], onOpen);
+    const open = button("Open disk WRITERS");
+    expect(open.textContent).toBe("Open disk");
+    expect(q('[data-testid="disk-card"] h3')?.textContent).toBe("WRITERS");
+    expect(container.querySelectorAll('[data-testid="disk-card"] > button').length).toBe(1);
+    await click(open);
+    expect(onOpen).toHaveBeenCalledWith(ID_A);
+    // A native button turns Enter into a click; the keydown must not be swallowed.
+    const ev = new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true });
+    open.dispatchEvent(ev);
+    expect(ev.defaultPrevented).toBe(false);
+    expect(open.tabIndex).toBe(0);
+    expect(open.disabled).toBe(false);
+  });
+
+  it("shows recovered, partial and lost as badges with text, plus size and date range", async () => {
+    await mountCards([rich()]);
+    const badges = Array.from(container.querySelectorAll('[data-testid="card-counts"] .ec-badge[data-grade]'));
+    expect(badges.map((b) => `${b.getAttribute("data-grade")}:${b.textContent}`)).toEqual([
+      "recovered:Recovered 2",
+      "partial:Partial 1",
+      "lost:Lost 0",
+    ]);
+    expect(q('[data-testid="card-facts"]')?.textContent).toBe("1.4 MB | 3 files | 1991-02-01 to 1992-03-04");
+  });
+
+  it("falls back to no date when the card has no dates", async () => {
+    await mountCards([rich({ dateFirst: null, dateLast: null })]);
+    expect(q('[data-testid="card-facts"]')?.textContent).toContain("no date");
+  });
+
+  it("makes Summarise primary, groups the exports and keeps Rescan secondary", async () => {
+    await mountCards([rich()]);
+    expect(button("Summarise new disks").classList.contains("ec-btn-primary")).toBe(true);
+    const group = q('[data-testid="export-group"]') as HTMLElement;
+    expect(group.getAttribute("role")).toBe("group");
+    const inGroup = Array.from(group.querySelectorAll("button")).map((b) => b.textContent);
+    expect(inGroup).toEqual(["Export CSV", "Export Markdown"]);
+    for (const t of ["Export CSV", "Export Markdown", "Rescan"]) {
+      expect(button(t).classList.contains("ec-btn-secondary")).toBe(true);
+      expect(button(t).classList.contains("ec-btn-primary")).toBe(false);
+    }
+    expect(group.contains(button("Rescan"))).toBe(false);
+    expect(STYLE_TEXT).toContain(".ec-btn-primary");
+  });
+
+  it("renders a hostile label as text in the heading and the aria-label", async () => {
+    const evil = "<img src=x onerror=alert(1)>";
+    await mountCards([rich({ label: evil })]);
+    expect(q('[data-testid="disk-card"] h3')?.textContent).toBe(evil);
+    expect(container.querySelector("img")).toBeNull();
+    expect(button(`Open disk ${evil}`)).toBeTruthy();
+  });
+});
+
 describe("Grave row", () => {
   it("makes the whole row a real button holding the name and the grade", async () => {
     const api = fakeApi({
@@ -367,8 +441,69 @@ describe("Disk view", () => {
     const items = Array.from(container.querySelectorAll('[data-testid="exhume-results"] li')).map(
       (li) => li.textContent,
     );
-    expect(items).toEqual(["A.TXT: succeeded", "GONE.TXT: failed"]);
+    expect(items).toEqual(["A.TXT: succeeded", "GONE.TXT: failed (x)"]);
     expect(button("Exhume all recoverable").disabled).toBe(false);
+  });
+
+  describe("exhume-all destinations", () => {
+    async function runExhume(results: ExhumeOutcome[], files: FileEntry[], libPath = "/my/lib"): Promise<ExhumeApi> {
+      const api = fakeApi({
+        getLibrary: () => Promise.resolve({ path: libPath, error: null }),
+        listDisks: () => Promise.resolve({ disks: [card(ID_A, false)] }),
+        getDisk: () => Promise.resolve(detail({ files, totalEntries: files.length })),
+        exhumeAll: () => Promise.resolve({ results }),
+        getPreview: () => Promise.reject(new Error("nope")),
+      });
+      await mount(diskView(api));
+      await click(button("Exhume all recoverable"));
+      return api;
+    }
+    const items = (): (string | null)[] =>
+      Array.from(container.querySelectorAll('[data-testid="exhume-results"] li')).map((li) => li.textContent);
+
+    it("shows source -> output path, collision names and failure reasons", async () => {
+      await runExhume(
+        [
+          { entry: 1, path: "README.TXT", outcome: "exhumed", outputPath: "exhumed/README.txt" },
+          { entry: 2, path: "SUB/README.TXT", outcome: "exhumed", outputPath: "exhumed/README-1.txt" },
+          { entry: 3, path: "BAD.BIN", outcome: "failed", errorCode: "NO_CONVERTER" },
+        ],
+        [file(1, "README.TXT"), file(2, "SUB/README.TXT"), file(3, "BAD.BIN", "recovered")],
+      );
+      expect(items()).toEqual([
+        "README.TXT -> exhumed/README.txt",
+        "SUB/README.TXT -> exhumed/README-1.txt",
+        "BAD.BIN: failed (NO_CONVERTER)",
+      ]);
+    });
+
+    it("shows the real library path line and does not leak absolute output paths", async () => {
+      await runExhume(
+        [{ entry: 1, path: "A.TXT", outcome: "exhumed", outputPath: "/my/lib/exhumed/A-1.txt" }],
+        [file(1, "A.TXT")],
+      );
+      expect(q('[data-testid="exhume-location"]')?.textContent).toBe("Exhumed files are in /my/lib/exhumed/");
+      expect(items()).toEqual(["A.TXT -> exhumed/A-1.txt"]);
+    });
+
+    it("keeps results after selecting a preview", async () => {
+      await runExhume([{ entry: 1, path: "A.TXT", outcome: "exhumed", outputPath: "exhumed/A.txt" }], [file(1, "A.TXT")]);
+      await click(button("Tombstone: A.TXT"));
+      expect(items()).toEqual(["A.TXT -> exhumed/A.txt"]);
+    });
+
+    it("renders hostile names as text", async () => {
+      const evil = "<img src=x onerror=alert(1)>.TXT";
+      await runExhume(
+        [{ entry: 1, path: evil, outcome: "exhumed", outputPath: "exhumed/<b>x</b>.txt" }],
+        [file(1, evil)],
+        "/lib/<i>x</i>",
+      );
+      expect(container.querySelector('[data-testid="exhume-results"] img, [data-testid="exhume-results"] b')).toBeNull();
+      expect(q('[data-testid="exhume-location"] i')).toBeNull();
+      expect(items()).toEqual([`${evil} -> exhumed/<b>x</b>.txt`]);
+      expect(q('[data-testid="exhume-location"]')?.textContent).toContain("/lib/<i>x</i>/exhumed/");
+    });
   });
 
   it("keeps the file list usable when a preview fails", async () => {
@@ -417,7 +552,159 @@ describe("Disk view", () => {
   });
 });
 
+describe("Disk page layout (22.3)", () => {
+  function richCard(over: Partial<DiskCardView> = {}): DiskCardView {
+    return {
+      ...card(ID_A, true),
+      label: "WRITERS",
+      relPath: "writers-disk.img",
+      sizeBytes: 1474560,
+      geometry: { source: "bpb", label: '1.44 MB 3.5"' },
+      fileCount: 3,
+      dateFirst: "1991-02-01",
+      dateLast: "1993-06-30",
+      counts: { alive: 2, recovered: 3, partial: 1, lost: 2 },
+      warnings: [{ code: "w", message: "FAT copies differ" }],
+      notes: [{ id: "n1", text: "note one", savedAt: "2024-01-01T00:00:00.000Z", agent: "exhume-undertaker" }],
+      ...over,
+    };
+  }
+  const entries: FileEntry[] = [
+    { id: 1, path: "LETTER.WS", kind: "file", state: "alive", size: 2048, date: "1991-02-01" },
+    { id: 2, path: "DATA.DBF", kind: "file", state: "recovered", size: 10, date: null },
+    { id: 3, path: "PIC.PCX", kind: "file", state: "partial", size: 10, date: null },
+    { id: 4, path: "README.TXT", kind: "file", state: "alive", size: 10, date: null },
+    { id: 5, path: "GONE.WS", kind: "file", state: "lost", size: 10, date: null },
+    { id: 6, path: "DOCS", kind: "directory", state: "alive", size: 0, date: "1991-02-01" },
+  ];
+  const open = async (c: DiskCardView, files: FileEntry[] = entries): Promise<void> => {
+    const api = fakeApi({
+      listDisks: () => Promise.resolve({ disks: [c] }),
+      getDisk: () => Promise.resolve(detail({ card: c, files, totalEntries: files.length })),
+      getPreview: () => Promise.reject(new Error("nope")),
+    });
+    await mount(diskView(api));
+  };
+
+  it("shows the label as the page heading and falls back to relPath", async () => {
+    await open(richCard());
+    expect(container.querySelectorAll("h1").length).toBe(1);
+    expect(q("h1")?.textContent).toBe("WRITERS");
+    expect(q('[data-testid="disk-relpath"]')?.textContent).toBe("writers-disk.img");
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    await open(richCard({ label: "" }));
+    expect(q("h1")?.textContent).toBe("writers-disk.img");
+  });
+
+  it("shows facts, graded count badges with text, warnings, summary and notes", async () => {
+    await open(richCard());
+    const facts = Array.from(container.querySelectorAll('[data-testid="disk-facts"] li')).map((li) => li.textContent);
+    expect(facts).toEqual(["1.4 MB", '1.44 MB 3.5"', "3 files", "1991-02-01 to 1993-06-30"]);
+    const badges = Array.from(container.querySelectorAll('[data-testid="count-badges"] .ec-badge')).map(
+      (b) => [b.getAttribute("data-grade"), b.textContent],
+    );
+    expect(badges).toEqual([
+      ["recovered", "Recovered 3"],
+      ["partial", "Partial 1"],
+      ["lost", "Lost 2"],
+    ]);
+    expect(q('[data-testid="disk-warnings"]')?.textContent).toBe("FAT copies differ");
+    expect(q('[data-testid="disk-summary"]')?.textContent).toBe("s");
+    expect(q('[data-testid="disk-notes"]')?.textContent).toContain("note one");
+  });
+
+  it("clamps a long summary with a Show full summary toggle", async () => {
+    const text = "word ".repeat(120).trim();
+    await open(richCard({ summary: { text, savedAt: "2024-01-01T00:00:00.000Z", agent: "exhume-archivist" } }));
+    const p = q('[data-testid="disk-summary"]') as HTMLElement;
+    expect(p.getAttribute("data-clamped")).toBe("true");
+    await click(button("Show full summary"));
+    expect(p.getAttribute("data-clamped")).toBe("false");
+  });
+
+  it("shows the conversion for known formats and only size and date otherwise", async () => {
+    await open(richCard());
+    const meta = (path: string): string =>
+      q(`[data-testid="graveyard"] li [aria-label$="${path}"] [data-testid="grave-meta"]`)?.textContent ?? "";
+    expect(meta("LETTER.WS")).toBe("2 KB | 1991-02-01 | Converts: WordStar -> Markdown");
+    expect(meta("DATA.DBF")).toBe("10 B | no date | Converts: dBase -> CSV");
+    expect(meta("PIC.PCX")).toBe("10 B | no date | Converts: PCX -> PNG");
+    expect(meta("README.TXT")).toBe("10 B | no date | Converts: text");
+    // A lost file cannot be converted.
+    expect(meta("GONE.WS")).toBe("10 B | no date");
+  });
+
+  it("renders a directory with a folder mark and no button", async () => {
+    await open(richCard());
+    const dir = q('[data-testid="directory"]') as HTMLElement;
+    expect(dir.textContent).toContain("DOCS");
+    expect(dir.querySelector("button")).toBeNull();
+    expect(dir.querySelector(".ec-grave-mark")?.getAttribute("data-shape")).toBe("folder");
+    expect(dir.querySelector(".ec-grave-mark")?.getAttribute("aria-hidden")).toBe("true");
+    expect(container.querySelectorAll('[data-testid="graveyard"] button').length).toBe(5);
+  });
+
+  it("shows grade badges with their text on deleted rows", async () => {
+    await open(richCard());
+    const grave = q('[data-testid="open-grave"]') as HTMLElement;
+    const badge = grave.querySelector(".ec-badge") as HTMLElement;
+    expect(badge.getAttribute("data-grade")).toBe("recovered");
+    expect(badge.textContent).toBe("Grade: recovered");
+  });
+
+  it("renders hostile label, relPath, warnings, notes and file names as text", async () => {
+    const evil = "<img src=x onerror=alert(1)>";
+    await open(
+      richCard({
+        label: evil,
+        relPath: "<b>r</b>.img",
+        warnings: [{ code: "w", message: "<script>1</script>" }],
+        notes: [{ id: "n1", text: "<i>n</i>", savedAt: "2024-01-01T00:00:00.000Z", agent: "exhume-undertaker" }],
+      }),
+      [file(1, "<u>x</u>.WS"), { ...file(2, "<em>d</em>"), kind: "directory" }],
+    );
+    expect(container.querySelector("img, b, script, i, u, em")).toBeNull();
+    expect(q("h1")?.textContent).toBe(evil);
+    expect(q('[data-testid="disk-relpath"]')?.textContent).toBe("<b>r</b>.img");
+    expect(q('[data-testid="disk-warnings"]')?.textContent).toBe("<script>1</script>");
+    expect(q('[data-testid="disk-notes"]')?.textContent).toContain("<i>n</i>");
+    expect(q('[data-testid="tombstone"] .ec-grave-name')?.textContent).toBe("<u>x</u>.WS");
+    expect(q('[data-testid="directory"] .ec-grave-name')?.textContent).toBe("<em>d</em>");
+  });
+
+  it("puts the preview in a column that is sticky from 1100px up", () => {
+    expect(STYLE_TEXT).toMatch(/@media \(min-width: 1100px\)\s*\{[^@]*\.ec-disk-side\s*\{[^}]*position: sticky/);
+    expect(STYLE_TEXT).toMatch(/@media \(min-width: 1100px\)\s*\{[^@]*grid-template-columns/);
+  });
+
+  it("has an exact grade colour for each state in both modes", () => {
+    for (const g of ["recovered", "partial", "lost"]) {
+      expect(STYLE_TEXT).toMatch(new RegExp(`\\.ec-badge\\[data-grade="${g}"\\] \\{ background: #[0-9a-f]{6}; color: #[0-9a-f]{6}`));
+      expect(STYLE_TEXT).toMatch(new RegExp(`\\[data-mode="dark"\\] \\.ec-badge\\[data-grade="${g}"\\]`));
+    }
+  });
+});
+
+describe("Format helpers", () => {
+  it("formats sizes, ranges and conversions", () => {
+    expect(formatBytes(0)).toBe("0 B");
+    expect(formatBytes(1536)).toBe("1.5 KB");
+    expect(formatBytes(1474560)).toBe("1.4 MB");
+    expect(formatDateRange("a", "a")).toBe("a");
+    expect(formatDateRange(null, "b")).toBe("b");
+    expect(formatDateRange(null, null)).toBeNull();
+    expect(conversionFor("x.pcx")).toBe("PCX -> PNG");
+    expect(conversionFor("x.bin")).toBeNull();
+    expect(conversionFor("noext")).toBeNull();
+  });
+});
+
 describe("Styles", () => {
+  it("uses exactly one style element's text with no interpolation marker", () => {
+    expect(STYLE_TEXT).not.toContain("${");
+  });
+
   it("puts decorative keyframes inside a prefers-reduced-motion: no-preference rule", () => {
     const start = STYLE_TEXT.indexOf("@media (prefers-reduced-motion: no-preference)");
     expect(start).toBeGreaterThanOrEqual(0);
