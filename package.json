@@ -1,6 +1,11 @@
 {
   "name": "exhume-crew",
   "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tsang326/exhume-crew.git"
+  },
+  "homepage": "https://github.com/tsang326/exhume-crew#readme",
   "private": true,
   "type": "module",
   "description": "Exhume Crew app: browse and exhume old floppy disk images.",

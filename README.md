@@ -1,7 +1,8 @@
 # Exhume Crew
 
 A Kiro Crew app that catalogues a box of old DOS floppy disk images and lets two agents read, explain and exhume
-them. Built on [Exhume](https://github.com/tsang326/exhume). Work in progress for Kiroween 2026.
+them. Built on [Exhume](https://github.com/tsang326/exhume) for Kiroween 2026.
+Source: https://github.com/tsang326/exhume-crew
 
 ## What the app does
 
@@ -29,10 +30,14 @@ Requirements: Kiro Crew 0.12.1 or newer (`minKiroCrewVersion`), macOS or Linux, 
 machine. The built files (`backend/server.mjs`, `mcp/catalogue-mcp.mjs`, `ui/dist/index.mjs`) are committed, so
 there is no build step and no runtime npm dependency.
 
-1. Clone this repository.
-2. Install from the local folder: `kirocrew app install <path to this folder>`. This copies the folder to
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/tsang326/exhume-crew.git
+   ```
+2. Install from the local folder: `kirocrew app install ./exhume-crew`. This copies the folder to
    `~/.kiro/crew/apps/exhume-crew/`. (The API form is `POST /api/apps/install` with `{"source": "/path"}`.)
-3. Enable it: `kirocrew app enable exhume-crew`.
+3. Enable it: open the Apps page of the Crew dashboard and trust Exhume Crew when it asks. `kirocrew app enable
+   exhume-crew` is refused by policy until the app has been trusted there once.
 4. Open the Exhume Crew page from the Crew sidebar.
 5. Choose the Library. The default is `~/Exhume Library`. The Settings area on the page is the control for changing
    it. The home directory and `/` are rejected.
