@@ -51,7 +51,7 @@ describe("daylight theme", () => {
     expect(day?.parentElement).toBe(c.querySelector('[data-testid="root"]'));
     expect(day?.className).not.toContain("flicker");
     expect(STYLE_TEXT).toMatch(/\.ec-daylight \{[^}]*pointer-events: none/);
-    expect(STYLE_TEXT).toMatch(/\.ec-daylight \{[^}]*rgba\(244,248,255,\.35\)/);
+    expect(STYLE_TEXT).toMatch(/\.ec-daylight \{[^}]*rgba\(255,240,205,\.55\)/);
     expect(STYLE_TEXT).not.toMatch(/\.ec-daylight \{[^}]*mix-blend-mode/);
     expect(c.querySelectorAll("style")).toHaveLength(1);
   });
@@ -82,7 +82,7 @@ describe("daylight theme", () => {
   });
   it("styles cards and mist for light mode only via data-mode", () => {
     expect(STYLE_TEXT).toContain('.ec-root[data-mode="light"] .ec-card');
-    expect(STYLE_TEXT).toContain("box-shadow: 3px 4px 10px rgba(30,41,59,.12)");
+    expect(STYLE_TEXT).toContain("box-shadow: 4px 6px 14px rgba(30,41,59,.20)");
     expect(STYLE_TEXT).toContain('.ec-root[data-mode="light"] .ec-fog ellipse');
   });
 });

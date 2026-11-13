@@ -1273,8 +1273,8 @@ var STYLE_TEXT = `
 .ec-light-a { mix-blend-mode: color-dodge; background: radial-gradient(circle at var(--ec-lx, calc(100% - 48px)) var(--ec-ly, 56px), rgba(255,214,140,.70) 0, rgba(255,196,110,.36) 90px, rgba(255,170,80,.14) 330px, rgba(255,150,60,.05) 620px, rgba(255,150,60,0) 900px); }
 .ec-light-b { mix-blend-mode: screen; background: radial-gradient(circle at var(--ec-lx, calc(100% - 48px)) var(--ec-ly, 56px), rgba(255,170,70,.16) 0, rgba(255,170,70,0) 700px); }
 .ec-root[data-light="off"] .ec-light { display: none; }
-.ec-daylight { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(circle farthest-corner at 0 0, rgba(244,248,255,.35) 0, rgba(244,248,255,0) 100%); }
-.ec-root[data-mode="light"] .ec-card, .ec-root[data-mode="light"] .ec-preview { box-shadow: 3px 4px 10px rgba(30,41,59,.12); }
+.ec-daylight { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(circle farthest-corner at 0 0, rgba(255,240,205,.55) 0, rgba(255,240,205,.18) 35%, rgba(255,240,205,0) 65%), linear-gradient(135deg, rgba(30,41,59,0) 45%, rgba(30,41,59,.06) 100%); }
+.ec-root[data-mode="light"] .ec-card, .ec-root[data-mode="light"] .ec-preview { box-shadow: 4px 6px 14px rgba(30,41,59,.20), 1px 2px 3px rgba(30,41,59,.10); }
 .ec-root[data-mode="light"] .ec-fog ellipse { fill: #dbe3ec; fill-opacity: 0.07; }
 .ec-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .ec-shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px 16px; list-style: none; margin: 0; padding: 0; }
@@ -1321,7 +1321,7 @@ li[data-testid="directory"].ec-grave { border-radius: 4px; border-style: solid; 
 .ec-grave-meta { display: block; font-size: 0.85em; }
 .ec-disk-grid { display: flex; flex-direction: column; gap: 16px; }
 .ec-disk-side { min-width: 0; }
-.ec-header { display: flex; align-items: flex-start; gap: 76px; min-height: 106px; }
+.ec-header { display: flex; align-items: center; gap: 12px; }
 .ec-header-lantern { flex: none; display: block; margin: 0 4px 0 auto; overflow: visible; }
 .ec-title { margin: 0; font-size: 1.5em; line-height: 1.2; }
 .ec-subtitle { margin: 2px 0 0 0; opacity: 0.8; }
