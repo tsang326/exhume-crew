@@ -1,0 +1,63 @@
+{
+  "name": "exhume-crew",
+  "version": "0.1.0",
+  "displayName": "Exhume Crew",
+  "description": "Catalogue a box of old floppy disks, then let an undertaker and an archivist read, explain and exhume them.",
+  "license": "MIT",
+  "iconPath": "assets/icon.png",
+  "minKiroCrewVersion": "0.12.1",
+  "tags": ["floppy", "archive", "retro", "files", "recovery", "agents"],
+  "platform": { "os": ["macos", "linux"] },
+  "dependencies": { "commands": ["node"] },
+  "agents": ["agents/undertaker.json", "agents/archivist.json"],
+  "skills": ["skills/floppy-archive"],
+  "mcpServers": {
+    "exhume": {
+      "command": "python3",
+      "args": ["mcp/launch.py", "exhume"],
+      "autoApprove": ["open_disk", "read_grave", "explain_state"]
+    },
+    "exhume-catalogue": {
+      "command": "python3",
+      "args": ["mcp/launch.py", "catalogue"],
+      "autoApprove": ["list_disks", "get_disk_card", "save_disk_summary", "add_disk_note"]
+    }
+  },
+  "crons": [
+    {
+      "name": "summarise-new-disks",
+      "every": 86400,
+      "enabled": false,
+      "agent": "exhume-archivist",
+      "message": "Summarise every disk in the Exhume Crew catalogue that has no summary: call list_disks with withoutSummary true, and for each disk follow the floppy-archive skill and save the result with save_disk_summary. If a disk fails, skip it and continue with the next one."
+    }
+  ],
+  "backend": {
+    "entryPoint": "backend/server.mjs",
+    "type": "node",
+    "port": "auto",
+    "healthCheck": "/health"
+  },
+  "ui": {
+    "entry": "dist/index.mjs",
+    "pages": [{ "route": "/apps/exhume-crew", "label": "Exhume Crew", "icon": "Archive" }],
+    "sidebar": { "section": "Apps", "order": 10 }
+  },
+  "permissions": {
+    "api": ["/apps/exhume-crew/api", "/apps/exhume-crew/api/*"],
+    "cron": true,
+    "network": false
+  },
+  "setup": {
+    "configSchema": {
+      "type": "object",
+      "properties": {
+        "libraryPath": {
+          "type": "string",
+          "default": "~/Exhume Library",
+          "description": "Folder with your disk images"
+        }
+      }
+    }
+  }
+}
