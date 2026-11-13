@@ -1561,6 +1561,64 @@
         "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
         "timestamp": 1794455406693
       }
+    ],
+    "21.1 Add the prompt-injection demo disk `harbor-note.img`": [
+      {
+        "executionId": "f68d3d0d-df9b-450c-85e6-afdcf6311215",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794455917975
+      },
+      {
+        "executionId": "f68d3d0d-df9b-450c-85e6-afdcf6311215",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794455924993
+      },
+      {
+        "executionId": "f68d3d0d-df9b-450c-85e6-afdcf6311215",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794458207473
+      }
+    ],
+    "21.2 Record the owner's manual results of 2026-11-12": [
+      {
+        "executionId": "f68d3d0d-df9b-450c-85e6-afdcf6311215",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794455918753
+      },
+      {
+        "executionId": "f68d3d0d-df9b-450c-85e6-afdcf6311215",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794458213392
+      },
+      {
+        "executionId": "f68d3d0d-df9b-450c-85e6-afdcf6311215",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794458973121
+      }
+    ],
+    "21.3 Rebuild and run all checks": [
+      {
+        "executionId": "f68d3d0d-df9b-450c-85e6-afdcf6311215",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794455919023
+      },
+      {
+        "executionId": "f68d3d0d-df9b-450c-85e6-afdcf6311215",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794458977564
+      },
+      {
+        "executionId": "f68d3d0d-df9b-450c-85e6-afdcf6311215",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794466260431
+      }
+    ],
+    "21. Injection demo disk and verified results (owner request after task 20; do not commit)": [
+      {
+        "executionId": "f68d3d0d-df9b-450c-85e6-afdcf6311215",
+        "chatSessionId": "sess_5dc81f3b-0fb7-48e4-b4b1-b2d449aef68c",
+        "timestamp": 1794466260497
+      }
     ]
   }
 }

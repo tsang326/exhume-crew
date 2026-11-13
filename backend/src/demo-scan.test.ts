@@ -25,6 +25,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createStore } from "../../src/shared/store";
 import type { DiskCard } from "../../src/shared/schema";
+import { buildImage } from "../../scripts/make-harbor-note.mjs";
 import { StdioExhumeClient } from "./exhume-client.js";
 import { Scanner } from "./scanner.js";
 
@@ -105,7 +106,7 @@ function normalise(cards: readonly DiskCard[]): Omit<DiskCard, "firstSeen">[] {
 }
 
 describe("demo library scan", () => {
-  it("yields exactly four cards equal to the golden file within 10 s, with no network", async () => {
+  it("yields exactly five cards equal to the golden file within 10 s, with no network", async () => {
     const fetchSpy = vi.fn(() => {
       throw new Error("network use is not allowed");
     });
@@ -114,7 +115,7 @@ describe("demo library scan", () => {
       const outcome = await scanLibrary(demoLibrary);
       expect(outcome.state).toBe("idle");
       expect(outcome.elapsedMs).toBeLessThan(SCAN_LIMIT_MS);
-      expect(outcome.cards).toHaveLength(4);
+      expect(outcome.cards).toHaveLength(5);
       expect(fetchSpy).not.toHaveBeenCalled();
 
       const actual = normalise(outcome.cards);
@@ -123,7 +124,7 @@ describe("demo library scan", () => {
       }
       const golden: unknown = JSON.parse(readFileSync(goldenPath, "utf8"));
       expect(Array.isArray(golden)).toBe(true);
-      expect(golden).toHaveLength(4);
+      expect(golden).toHaveLength(5);
       expect(JSON.parse(JSON.stringify(actual))).toEqual(golden);
       // No absolute path or scan time leaks into the golden file.
       const text = readFileSync(goldenPath, "utf8");
@@ -139,7 +140,7 @@ describe("demo library scan", () => {
     const names = readdirSync(demoLibrary)
       .filter((n) => n.endsWith(".img"))
       .slice(0, 16);
-    expect(names).toHaveLength(4);
+    expect(names).toHaveLength(5);
     for (const n of names) copyFileSync(path.join(demoLibrary, n), path.join(copy, n));
 
     // A dangling link stands in for an image that went missing after listing.
@@ -168,4 +169,29 @@ describe("demo library scan", () => {
       .digest("hex");
     expect(actual).toBe(match?.[1]);
   });
+
+  it("keeps harbor-note.img byte-identical to the generator output and to NOTICE.md", () => {
+    const committed = readFileSync(path.join(demoLibrary, "harbor-note.img"));
+    expect(Buffer.compare(buildImage(), committed)).toBe(0);
+    const notice = readFileSync(path.join(demoLibrary, "NOTICE.md"), "utf8");
+    const match = /harbor-note\.img SHA-256:\s*`([0-9a-f]{64})`/.exec(notice);
+    expect(match?.[1]).toBe(createHash("sha256").update(committed).digest("hex"));
+  });
+
+  it("reads every file of harbor-note.img through the real pinned server", async () => {
+    const client = new StdioExhumeClient({
+      appRoot,
+      libraryRoot: demoLibrary,
+      timeouts: { handshake: 10_000, open_disk: 20_000, read_grave: 10_000 },
+    });
+    clients.push(client);
+    const report = await client.openDisk("harbor-note.img");
+    const names = report.entries.filter((e) => e.kind === "file").map((e) => e.path.toUpperCase());
+    for (const n of ["README.TXT", "TIMES.TXT", "NOTE.TXT"]) expect(names.some((p) => p.endsWith(n))).toBe(true);
+    for (const e of report.entries.filter((x) => x.kind === "file")) {
+      const grave = await client.readGrave("harbor-note.img", e.path, e.id);
+      expect(grave.grave.id).toBe(e.id);
+    }
+    client.close();
+  }, 60_000);
 });

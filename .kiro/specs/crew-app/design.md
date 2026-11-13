@@ -52,8 +52,8 @@ Each row says what was seen and where. `$KC/` is the path prefix defined above. 
 | V19 | `platform` fields | Docs manifest | `platform.os` (default `["macos","linux"]`), `arch`, `installMode`. |
 | V20 | Icon | Docs manifest (`iconPath`: PNG, square, min 256x256); `$KC/apps/scaffold.py` (`"iconPath": "assets/icon.png"`); `$KC/apps/registry_pipeline/manifests.py` | `iconPath` is repo-relative and honoured by the store pipeline. |
 | V21 | `dependencies.commands` | Docs manifest | Missing required commands block installation, so `["node"]` is declared. |
-| V22 | Backend sandbox exists | `$KC/apps/backend.py` (`wrap_argv(cmd, mode="standard", ...)`); `$KC/sandbox_seatbelt.py` | The backend process is wrapped by an OS sandbox in "standard" mode. The seatbelt profile is built from deny rules for masked sub-paths. What it allows for a user library folder was **not** tested (see A9). |
-| V23 | **A bare `python3` command is rewritten to Crew's own interpreter** | `$KC/apps/bridges_mcp.py`: `_BARE_PYTHON = frozenset({"python", "python3", "py"})` (about line 182) and `resolve_stdio_command` (about line 225) | The docstring says bare Python launchers are resolved to the venv/gateway interpreter, with a `sys.executable` fallback. A bare PATH dependency that the app does not provide (`node`, `npx`, `docker`) is deliberately left untouched. Consequences: (1) no system Python is needed to run `python3 mcp/launch.py`; (2) `mcp/launch.py` MUST stay standard-library only, MUST NOT import `kiro_crew` and MUST NOT assume any dependency directory, because it runs under Crew's interpreter, not a plain system one; (3) `node` is **not** rewritten, so whether the launcher can find `node` in the MCP subprocess environment remains an assumption (A4). |
+| V22 | Backend sandbox exists | `$KC/apps/backend.py` (`wrap_argv(cmd, mode="standard", ...)`); `$KC/sandbox_seatbelt.py` | The backend process is wrapped by an OS sandbox in "standard" mode. The seatbelt profile is built from deny rules for masked sub-paths. What it allows for a user library folder was not tested when this row was written; the owner then verified read, write and `fs.watch` access by hand on 2026-11-12 (A9). |
+| V23 | **A bare `python3` command is rewritten to Crew's own interpreter** | `$KC/apps/bridges_mcp.py`: `_BARE_PYTHON = frozenset({"python", "python3", "py"})` (about line 182) and `resolve_stdio_command` (about line 225) | The docstring says bare Python launchers are resolved to the venv/gateway interpreter, with a `sys.executable` fallback. A bare PATH dependency that the app does not provide (`node`, `npx`, `docker`) is deliberately left untouched. Consequences: (1) no system Python is needed to run `python3 mcp/launch.py`; (2) `mcp/launch.py` MUST stay standard-library only, MUST NOT import `kiro_crew` and MUST NOT assume any dependency directory, because it runs under Crew's interpreter, not a plain system one; (3) `node` is **not** rewritten, so whether the launcher can find `node` in the MCP subprocess environment was an assumption (A4); the owner saw the launcher find `node` in Crew on 2026-11-12, and the stripped-`PATH` manual run remains A4b (Assumed). |
 
 ### Pinned Exhume server facts (read from `mcp/exhume-mcp.mjs`, sha256 matches `mcp/PINNED.md`)
 
@@ -71,22 +71,37 @@ These are facts about the bundle, not about Crew. They shape the backend client.
 
 Each assumption names the risk and the by-hand check to run during implementation. The README must list these under "Assumed" until checked (Requirement 21.2 to 21.5, 21.9). When one is checked, move it to "Verified by hand" with the date and method in the README, and move it here from Assumptions to Verified in the same commit.
 
+### Verified by hand (partial, 2026-11-12)
+
+Date: **2026-11-12**. Method: **owner, Kiro Crew 0.12.1, macOS**, as reported by the owner. These items moved here from the Assumptions table below; the README "Verified by hand" table carries the same rows. Only what the owner reported is claimed.
+
+| ID | Assumption that was checked | Result |
+|----|-----------------------------|--------|
+| A1 | Per-tool `tools` mounts of an app-namespaced server | Work. Read tools ran without a prompt and `exhume` prompted. The archivist's tool list was not reported; that part is A1b below. |
+| A2 | `autoApprove` and `exhume` prompting, in chat and cron | Read tools no prompt; `exhume` prompted and wrote `<Library>/exhumed/_RAFT1.md`; the cron run had no prompts. The written `kirocrew.json` entries were not reported as inspected. |
+| A3 | `mcp/launch.py` reaches the servers from the app folder | Both MCP servers start through `python3 mcp/launch.py` under Crew's interpreter. The absolute path in `kirocrew.json` was not reported as read. |
+| A4 | `launch.py` finds `node` | Found at `/opt/homebrew/bin/node` inside Crew. The stripped-`PATH` manual run is A4b below. |
+| A7 | `openChat` resolves the declared agent and auto-sends | `exhume-undertaker` resolved and auto-sent; "Summarise new disks" opened `exhume-archivist`, which saved sourced summaries for every disk. |
+| A8 | Cron `agent` accepts the declared name | `kirocrew cron trigger` ran `exhume-archivist` on a new disk with no prompts; the job stays paused (`enabled: false`). |
+| A9 | Sandbox lets the backend read the library, write `data/` and `exhumed/`; `fs.watch` | `~/Exhume Library` readable; `exhume` wrote into `exhumed/`; a newly copied image was picked up within seconds; summaries persisted. `recursive: true` was not tested separately. |
+| A10 | `.app_secret` is created | Created; the signed page API works through the gateway. |
+| A12 | Host styling is usable in both themes | Readable in dark and light. Which host Tailwind classes resolve was not inspected. |
+| A14 | `app update` keeps `data/` | Summaries survived two updates. |
+
+Related by-hand results that are not A items: local install with `kirocrew app install` works (V1); CLI `enable` is refused by policy until the owner trusts the app in the dashboard; `app update` re-registers 2 agents and 1 skill (V7); the backend port changes on update (9100, then 9101) and this is fine; on the `harbor-note` disk the archivist reported `NOTE.TXT` in its summary and in a note, followed none of it, exhumed nothing, and the image was unchanged; keyboard: Tab reaches graves, Enter opens the preview, the focus ring is visible.
+
+Still Assumed after this run, with no A id: reduced-motion behaviour and a measured focus ring contrast check.
+
+### Assumed (A1b, A4b, A5, A6, A11, A13)
+
 | ID | Assumption | Risk if wrong | How it is checked by hand |
 |----|-----------|---------------|---------------------------|
-| A1 | `tools` entries of the form `@exhume-crew:exhume/open_disk` mount exactly one tool of an app-namespaced server. Only `@mochi:mochi` (whole server) was seen in a real agent file; `@server/tool` is documented; the combination with the namespaced server name is untested. | Tools do not mount, or a whole server mounts. A whole-server mount would give the archivist an `exhume` tool. | After `enable`, open a chat with each agent and ask it to list its tools. Fallback if per-tool refs fail: mount whole servers with `@exhume-crew:exhume` and rely on the missing auto-approve for `exhume` plus the prompt rules; record the weaker boundary in the README. |
-| A2 | `autoApprove` in the app's `mcpServers` entries suppresses approval prompts on the kiro-cli/KAS path, in chat and in cron runs; `exhume` always prompts. The agent JSON also lists the same tools in `allowedTools` to cover the KAS projection described in V6. | A tool prompts when it should not (cron stalls), or worse, `exhume` does not prompt. | In chat: call `open_disk` (no prompt), `exhume` (prompt). Enable the cron once and check the Schedule page run: it must finish without approval prompts. Check `~/.kiro/agents/kirocrew.json` for the written entries. |
-| A3 | Crew rewrites `args[0] = "mcp/launch.py"` to the absolute path inside `~/.kiro/crew/apps/exhume-crew/` when it writes `kirocrew.json`. The code path was read (V5, V23) but never executed here, so the app-root-relative anchoring stays an assumption. | Servers fail to start from the session cwd. | After `enable`, read the registered entries in `~/.kiro/agents/kirocrew.json`; the arg must be absolute. Then use an agent tool. |
-| A4 | `launch.py` can find `node` under a stripped environment (`bridges_mcp.py` mentions kiro-cli stripping env). That the launcher itself runs under Crew's own Python is verified (V23); only the discovery of `node` is assumed, because Crew does not rewrite `node` (V23). | MCP servers fail to start. | Launcher tries `PATH`, nvm, `/opt/homebrew/bin`, `/usr/local/bin`, and prints one clear stderr line on failure. Check with a stripped `PATH` in a manual run of `python3 mcp/launch.py exhume`, then use an agent tool in Crew. |
+| A1b | The archivist's mounted tools do not include `exhume` (the per-tool mounts themselves are Verified by hand under A1). Not checked by listing each agent's tools. | A whole-server mount would give the archivist an `exhume` tool. | Open a chat with each agent and ask it to list its tools. Fallback if wrong: record the weaker boundary in the README. |
+| A4b | `launch.py` finds `node` when `PATH` is stripped in a manual run (discovery inside Crew is Verified by hand under A4). | MCP servers fail to start in a more restricted environment. | Run `python3 mcp/launch.py exhume` with a stripped `PATH`. |
 | A5 | Changing the query string of `/apps/exhume-crew` does not remount the page; the component can read `window.location.search` on mount and keep its own view state. Sub-routes such as `/apps/exhume-crew/disk` were not seen in the host router (V13). | Deep links to a disk do not work, or a reload loses the view. | Open `/apps/exhume-crew?id=<id>` directly and reload; use the in-app navigation and the browser Back button. |
 | A6 | `useAppApi().raw()` (present in the host code, absent from the docs) is permission-scoped like `get`. It is used for CSV/Markdown downloads and the PNG data path is JSON. | `raw` disappears in a later Crew release; downloads break. | Click Export CSV and Export Markdown. Fallback: add `?format=json` variants returning `{ filename, mime, content }`, which would change Requirement 8.1's wording. |
-| A7 | `openChat({ agent: "exhume-archivist", message, autoSend })` resolves the declared agent `name`, and `autoSend` sends the message without further input. | The chat opens with the default agent. | Press "Summarise new disks" and check the chat header agent name. |
-| A8 | Cron `agent: "exhume-archivist"` is accepted as the declared name. | Cron runs on the default agent. | Enable the cron, use "run now" on the Schedule page if available, or wait one interval set temporarily to 60 s in a dev copy. |
-| A9 | The "standard" backend sandbox lets the backend read the user library folder, write `data/`, and lets its Exhume child write `<library>/exhumed/`; `fs.watch` with `recursive: true` works inside it. | Scans or exhume fail with permission errors. | Run the demo library flow end to end. Watcher falls back to polling (design below), so only read/write access is critical. |
-| A10 | `<app>/.app_secret` is created when the app with a backend is enabled, so `KIROCREW_PROXY_SECRET` is set. | Backend has no secret and rejects every request (fails closed, with 401). | Open the Library page after enable; if empty, check the gateway log. |
 | A11 | The dashboard does not render a form from `setup.configSchema` in 0.12.1 (nothing in the host JS refers to it, V17). If a later Crew writes `config.json`, the backend honours `libraryPath` there as a fallback. | Install-time folder choice (Requirement 3.1) is only declarative. | Install and look for a prompt. The Settings_Area is the working path. |
-| A12 | Browser Tailwind classes used by the host's demo app (`text-muted`, `bg-card`, `border-border`, `text-text-strong`) and CSS variables like `--accent` are available to app pages. Only `--accent`, `--card-hl` and `data-theme` were seen read by host code. | Page looks unstyled or wrong in one theme. | Open the page in light and dark mode. Custom visuals use inline styles and `var(--accent)` with fallbacks, not Tailwind arbitrary values. |
 | A13 | The browser History API (`replaceState`) can update the query string without confusing the host router. | URL and view get out of sync. | Same check as A5. |
-| A14 | Local install does not run any `setup.onInstall`/build step and keeps `data/` across `app update`. No `setup` scripts are declared, so only the second half matters. | Catalogue lost on update (rebuilt by the next scan; summaries and notes would be lost). | Update the app and check the catalogue. |
 
 ## Accepted requirement impacts (applied to requirements.md)
 
@@ -201,7 +216,7 @@ exhume-crew/                       (the app root; this repo)
 │   ├── src/  index.tsx  views/  components/  lib/  host.d.ts
 │   └── dist/index.mjs             (built, committed)
 ├── scripts/build.mjs              (esbuild; three bundles)
-├── demo-library/                  (4 images + NOTICE.md)
+├── demo-library/                  (5 images + NOTICE.md)
 ├── docs/KIRO_LOG.md  docs/SPEC_BRIEFS.md
 └── .kiro/                         (steering, specs, hooks)
 ```
@@ -887,7 +902,7 @@ Errors are values. No module throws across a module boundary except for programm
 | Walk limits (depth, entries) | `scanner.ts` | One library warning; the walk continues elsewhere. |
 | Scan throws | `scanner.ts` | `ScanStatus.state = "failed"` with a fixed message; the UI keeps the earlier cards and re-enables Rescan (Requirement 13.10). |
 | Node older than 22 | `main.ts` banner, `launch.py` | Exit within 2 s with a one-line message naming the minimum version. |
-| `node` not found by the launcher | `launch.py` | One stderr line, exit 1; the MCP tools are missing for that session (A4). |
+| `node` not found by the launcher | `launch.py` | One stderr line, exit 1; the MCP tools are missing for that session (A4, A4b). |
 | No active library file for the launcher | `launch.py` | One stderr line, exit 1. |
 | UI call fails | UI | Visible text error in the relevant area, controls re-enabled, previous list and selection kept (Requirement 14.7, 14.10). |
 | Catalogue tool misuse | Catalogue_Server | `INVALID_REQUEST`, `DISK_NOT_FOUND`, `INVALID_LENGTH`, `NOTES_FULL` as structured errors with fixed messages; Store unchanged. |
@@ -915,7 +930,7 @@ Logging: the Backend logs to standard error with fixed event names and counts; i
 - **Manifest and layout** (1.1 to 1.7, 13.1, 16.1, 17.1, 17.2): parse `app.json` and compare with constants: name, display name, license, tags between 1 and 10, `platform.os` exactly `macos` and `linux`, `minKiroCrewVersion` `0.12.1`, `network` false, the two `autoApprove` lists whose union is exactly the Auto_Approve_List, no `exhume` in any auto-approve list, no MCP arg containing `~/.kiro/crew/apps/`, one cron entry with `every` 86400 and `enabled` false and `permissions.cron` true, `permissions.api` equal to the paths used by the UI wrapper and the route table, `iconPath` file exists and is a square PNG of at least 256 pixels, all declared paths exist.
 - **Pin** (2.1, 2.2, 19.8): SHA-256 of `mcp/exhume-mcp.mjs` equals the value in `mcp/PINNED.md`; the record has the source repo, the 40-character commit and the update steps.
 - **Routes** (7.1, 7.8, 7.11, 7.12, 7.14): route table equals the 11 operations; preview failure gives 502/504; status shape; library status.
-- **Demo library** (18.1 to 18.4, 18.6, 19.2): scan of `demo-library/` with the real pinned server produces exactly four cards equal to `backend/test-fixtures/demo-golden.json` after removing run-dependent fields (scan time, absolute paths); completes under 10 s; the FreeDOS image hash equals the one in `NOTICE.md`.
+- **Demo library** (18.1 to 18.4, 18.6, 19.2): scan of `demo-library/` with the real pinned server produces exactly five cards equal to `backend/test-fixtures/demo-golden.json` after removing run-dependent fields (scan time, absolute paths); completes under 10 s; the FreeDOS image hash equals the one in `NOTICE.md`.
 - **Catalogue server in-process** (19.7): each of the four tools invoked through the JSON-RPC handler: success, size cap, stripping, unknown Disk_Id.
 - **Concurrency integration** (6.4, 6.5): three child processes append through the Store at once and none is lost; a held lock gives `STORE_BUSY` after about 5 s.
 - **Static scans**: no `innerHTML`/`outerHTML`/`insertAdjacentHTML`/`dangerouslySetInnerHTML` in `ui/src`; no `http://`/`https://` literal in the UI bundle other than documentation-free constants; no `npx`, `latest`, `fetch(` in Backend or servers; no `eval`/`Function(`; Backend files never open a file for writing outside the Store and the demo copy; `tsc --noEmit` passes under `strict` with no explicit `any` (ESLint rule).
@@ -928,7 +943,7 @@ Logging: the Backend logs to standard error with fixed event names and counts; i
 ### Manual checks (record the result and date in the README, Requirement 1.9 and 21.3)
 
 - Install from the local folder, enable, confirm the page, both agents, the skill and both MCP servers are listed (1.8, 1.9).
-- Run each Assumption check A1 to A14, and move the result into "Verified by hand".
+- Run each Assumption check A1 to A14, and move the result into "Verified by hand". Partly done on 2026-11-12 (see "Verified by hand" under Assumptions).
 - With the demo library: open a disk; ask the undertaker for a file, then to exhume it (approval prompt appears for `exhume` only); let the archivist summarise one disk and confirm the Summary cites file names; check an instruction-bearing text file is reported and not followed (10.2 to 10.10, 11.3 to 11.8, 16.3).
 - Keyboard-only pass, focus ring contrast in light and dark mode, reduced-motion setting on (15.4, 15.5, 15.3).
 - Enable the cron once and confirm it runs without prompts (17.5).

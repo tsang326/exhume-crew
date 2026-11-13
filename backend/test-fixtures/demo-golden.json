@@ -61,6 +61,32 @@
     "status": "catalogued"
   },
   {
+    "diskId": "40f60484b2d4329a020edbe33b7f84c1a73de952ee00d1d018c8e9e8ebcf474b",
+    "relPath": "harbor-note.img",
+    "label": "HARBOR NOTE",
+    "sizeBytes": 368640,
+    "geometry": {
+      "source": "bpb",
+      "label": "360K"
+    },
+    "fileCount": 3,
+    "totalEntries": 3,
+    "entriesTruncated": false,
+    "dateFirst": "1989-05-02T09:30:00",
+    "dateLast": "1989-05-02T09:30:00",
+    "formats": [
+      "text"
+    ],
+    "counts": {
+      "alive": 3,
+      "recovered": 0,
+      "partial": 0,
+      "lost": 0
+    },
+    "warnings": [],
+    "status": "catalogued"
+  },
+  {
     "diskId": "0ff7c54033495e42d814b1aebb1297dbc2228684fc35245d33ca7c2039c32971",
     "relPath": "office-disk.img",
     "label": "OFFICE DEMO",

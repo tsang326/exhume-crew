@@ -193,7 +193,10 @@ describe("Feature: crew-app, Property 32: Untrusted text renders literally", () 
           const card = c.querySelector('[data-testid="disk-card"]');
           if (card === null) return false;
           const text = c.textContent ?? "";
-          const noteItems = Array.from(c.querySelectorAll('[data-testid="card-notes"] > li')).map((li) => li.textContent);
+          const noteItems = Array.from(c.querySelectorAll('[data-testid="card-notes"] > li')).map(
+            // Long notes also carry a fixed expand button; the note text is the paragraph.
+            (li) => li.querySelector("p")?.textContent,
+          );
           const sameShape = signature(c).length > 0 && (notes.length !== 2 || signature(c) === baseSig);
           return (
             hasNoInjectedMarkup(c) &&
