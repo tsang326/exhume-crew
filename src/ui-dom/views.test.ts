@@ -550,6 +550,20 @@ describe("Disk view", () => {
       ]);
     });
 
+    it("marks a byte-for-byte copy of a file with no converter as original bytes", async () => {
+      await runExhume(
+        [
+          { entry: 1, path: "BIGORD.MDX", outcome: "exhumed", outputPath: "exhumed/BIGORD.MDX.bin" },
+          { entry: 2, path: "INVOICES.WK1", outcome: "exhumed", outputPath: "exhumed/INVOICES.csv" },
+        ],
+        [file(1, "BIGORD.MDX"), file(2, "INVOICES.WK1")],
+      );
+      expect(items()).toEqual([
+        "BIGORD.MDX -> exhumed/BIGORD.MDX.bin (original bytes)",
+        "INVOICES.WK1 -> exhumed/INVOICES.csv",
+      ]);
+    });
+
     it("shows the real library path line and does not leak absolute output paths", async () => {
       await runExhume(
         [{ entry: 1, path: "A.TXT", outcome: "exhumed", outputPath: "/my/lib/exhumed/A-1.txt" }],
@@ -779,6 +793,8 @@ describe("Format helpers", () => {
     expect(formatDateRange(null, null)).toBeNull();
     expect(conversionFor("x.pcx")).toBe("PCX -> PNG");
     expect(conversionFor("x.bin")).toBeNull();
+    expect(conversionFor("INVOICES.WK1")).toBe("Lotus 1-2-3 -> CSV");
+    expect(conversionFor("calcust.qbe")).toBe("text");
     expect(conversionFor("noext")).toBeNull();
   });
 });

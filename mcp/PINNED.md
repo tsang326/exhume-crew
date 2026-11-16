@@ -1,9 +1,9 @@
 # Pinned Exhume MCP server
 
 `exhume-mcp.mjs` is a byte-for-byte copy of `power/server/exhume-mcp.mjs` from the Exhume repo
-(github.com/tsang326/exhume) at commit `293d283f74992f354f43ae6ae636421a8b2c9df9` (abbreviated `293d283`; the file last changed in `c3d1d04`).
+(github.com/tsang326/exhume) at commit `47c388af66cdb82c961ed0df6d4790def836fafd` (abbreviated `47c388a`; the file last changed in `47c388a`).
 
-SHA-256: `56251a47fb008c9abe0cc0b1c1db1f08a1bf4c88cf2b05b6bb73f1cffe83451e`
+SHA-256: `010751db0db7dbd02221e0b4a9a20faae824d75f63c337d0dad3617cf1a2098b`
 
 Never edit it here. To update: rebuild in the Exhume repo (`npm run build:mcp`), copy the file, update the commit
 and hash above and in the hash test, and note the change in `docs/KIRO_LOG.md`.

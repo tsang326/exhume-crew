@@ -532,6 +532,9 @@ function conversionFor(path) {
       return "dBase -> CSV";
     case "PCX":
       return "PCX -> PNG";
+    case "WK1":
+    case "WKS":
+      return "Lotus 1-2-3 -> CSV";
     case "TXT":
     case "BAT":
     case "ASC":
@@ -540,6 +543,12 @@ function conversionFor(path) {
     case "DIZ":
     case "1ST":
     case "ME":
+    case "PRG":
+    case "FMT":
+    case "QBE":
+    case "FRG":
+    case "LBG":
+    case "UPD":
       return "text";
     default:
       return null;
@@ -923,6 +932,9 @@ function LibraryView({ api, onOpenDisk, onSummarise, mode = "dark" }) {
 // ui/src/DiskView.tsx
 import { Fragment as Fragment2, jsx as jsx4, jsxs as jsxs4 } from "react/jsx-runtime";
 var EXHUME_ALL_TOOLTIP = "Exhumes live files and deleted entries graded recovered.";
+function isOriginalCopy(outputPath) {
+  return outputPath.toLowerCase().endsWith(".bin");
+}
 function relativeOutput(outputPath) {
   const norm = outputPath.replace(/\\/g, "/");
   if (norm.startsWith("exhumed/")) return norm;
@@ -1119,7 +1131,7 @@ function DiskView({ api, diskId, onBack, onAskUndertaker }) {
     ] }),
     exhume.phase === "error" ? /* @__PURE__ */ jsx4("p", { role: "alert", className: "ec-error", "data-testid": "exhume-error", children: "The exhume request failed." }) : null,
     exhume.phase === "done" ? /* @__PURE__ */ jsxs4("div", { children: [
-      /* @__PURE__ */ jsx4("ul", { "aria-label": "Exhume results", "data-testid": "exhume-results", children: exhume.results.map((r, i) => /* @__PURE__ */ jsx4("li", { "data-outcome": r.outcome, children: r.outcome === "exhumed" && r.outputPath !== void 0 ? `${nameFor(r)} -> ${relativeOutput(r.outputPath)}` : r.outcome === "exhumed" ? `${nameFor(r)}: succeeded` : `${nameFor(r)}: failed${r.errorCode !== void 0 ? ` (${r.errorCode})` : ""}` }, `${r.entry}-${i}`)) }),
+      /* @__PURE__ */ jsx4("ul", { "aria-label": "Exhume results", "data-testid": "exhume-results", children: exhume.results.map((r, i) => /* @__PURE__ */ jsx4("li", { "data-outcome": r.outcome, children: r.outcome === "exhumed" && r.outputPath !== void 0 ? `${nameFor(r)} -> ${relativeOutput(r.outputPath)}${isOriginalCopy(r.outputPath) ? " (original bytes)" : ""}` : r.outcome === "exhumed" ? `${nameFor(r)}: succeeded` : `${nameFor(r)}: failed${r.errorCode !== void 0 ? ` (${r.errorCode})` : ""}` }, `${r.entry}-${i}`)) }),
       /* @__PURE__ */ jsx4("p", { className: "ec-muted", "data-testid": "exhume-location", children: libraryPath !== null ? `Exhumed files are in ${libraryPath.replace(/[\\/]+$/, "")}/exhumed/` : "Exhumed files are in the library's exhumed/ folder." })
     ] }) : null,
     /* @__PURE__ */ jsxs4("div", { className: "ec-disk-grid", "data-testid": "disk-grid", children: [
