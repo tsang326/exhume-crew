@@ -59,9 +59,9 @@ describe("night light overlay", () => {
     expect(c.querySelector('[data-testid="light-wash"].ec-light-b')).not.toBeNull();
     expect(rule(".ec-light-a")).toContain("mix-blend-mode: color-dodge");
     expect(rule(".ec-light-a")).toContain("at var(--ec-lx");
-    expect(rule(".ec-light-a")).toContain("rgba(255,214,140,.70) 0");
+    expect(rule(".ec-light-a")).toContain("rgba(255,214,140,.45) 0");
     expect(rule(".ec-light-b")).toContain("mix-blend-mode: screen");
-    expect(rule(".ec-light-b")).toContain("rgba(255,170,70,.16) 0");
+    expect(rule(".ec-light-b")).toContain("rgba(255,170,70,.10) 0");
     expect(c.querySelectorAll("style")).toHaveLength(1);
   });
   it("is aria-hidden, ignores the pointer and sits inside an isolated root", async () => {
