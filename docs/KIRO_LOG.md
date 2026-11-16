@@ -17,6 +17,8 @@ An honest record of what Kiro produced in this repository and what was corrected
 
 ## Fixed by hand
 
+- 2026-11-16, outside Kiro: the lantern glow was made smaller and dimmer (`ui/src/styles.ts`, commit `af56fc9`), since it
+  hurt readability and is decoration only.
 - 2026-11-16, outside Kiro: re-pinned `mcp/exhume-mcp.mjs` to Exhume commit `47c388a`. After a test on a real
   1989 dBase IV sample disk, where 47 of 86 files came back `NO_CONVERTER`, Exhume gained Lotus 1-2-3 and dBase IV
   memo tables, reads dBase sources as text, and its `exhume` tool copies a file with no converter byte for byte
