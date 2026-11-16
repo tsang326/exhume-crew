@@ -17,4 +17,8 @@ An honest record of what Kiro produced in this repository and what was corrected
 
 ## Fixed by hand
 
-None
+- 2026-11-16, outside Kiro: re-pinned `mcp/exhume-mcp.mjs` to Exhume commit `47c388a`. After a test on a real
+  1989 dBase IV sample disk, where 47 of 86 files came back `NO_CONVERTER`, Exhume gained Lotus 1-2-3 and dBase IV
+  memo tables, reads dBase sources as text, and its `exhume` tool copies a file with no converter byte for byte
+  as `NAME.EXT.bin`. The Disk_Page marks those copies `(original bytes)` and labels `.WK1` files; one test and the
+  spec criterion (crew-app Requirement 9.6) were updated with it.

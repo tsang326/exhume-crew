@@ -37,6 +37,11 @@ type ExhumeState =
  * Display form of an output path: `exhumed/<name>` onward. The API returns the relative form;
  * if an absolute path ever arrives, only the part after the exhumed folder is shown.
  */
+/** Exhume names a byte-for-byte copy `NAME.EXT.bin`; no converter writes `.bin`. */
+export function isOriginalCopy(outputPath: string): boolean {
+  return outputPath.toLowerCase().endsWith(".bin");
+}
+
 export function relativeOutput(outputPath: string): string {
   const norm = outputPath.replace(/\\/g, "/");
   if (norm.startsWith("exhumed/")) return norm;
@@ -345,7 +350,7 @@ export function DiskView({ api, diskId, onBack, onAskUndertaker }: DiskViewProps
             {exhume.results.map((r, i) => (
               <li key={`${r.entry}-${i}`} data-outcome={r.outcome}>
                 {r.outcome === "exhumed" && r.outputPath !== undefined
-                  ? `${nameFor(r)} -> ${relativeOutput(r.outputPath)}`
+                  ? `${nameFor(r)} -> ${relativeOutput(r.outputPath)}${isOriginalCopy(r.outputPath) ? " (original bytes)" : ""}`
                   : r.outcome === "exhumed"
                     ? `${nameFor(r)}: succeeded`
                     : `${nameFor(r)}: failed${r.errorCode !== undefined ? ` (${r.errorCode})` : ""}`}

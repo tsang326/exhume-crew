@@ -54,7 +54,7 @@ export function formatFileCount(n: number): string {
 /**
  * The conversion Exhume applies, guessed from the file extension with the same extension list
  * the converter uses as its fallback (the catalogue stores no per-file format). Null when the
- * extension is not one the converter knows.
+ * extension is not one the converter knows (such a file is exhumed as a copy of its original bytes).
  */
 export function conversionFor(path: string): string | null {
   const dot = path.lastIndexOf(".");
@@ -71,6 +71,9 @@ export function conversionFor(path: string): string | null {
       return "dBase -> CSV";
     case "PCX":
       return "PCX -> PNG";
+    case "WK1":
+    case "WKS":
+      return "Lotus 1-2-3 -> CSV";
     case "TXT":
     case "BAT":
     case "ASC":
@@ -79,6 +82,12 @@ export function conversionFor(path: string): string | null {
     case "DIZ":
     case "1ST":
     case "ME":
+    case "PRG":
+    case "FMT":
+    case "QBE":
+    case "FRG":
+    case "LBG":
+    case "UPD":
       return "text";
     default:
       return null;

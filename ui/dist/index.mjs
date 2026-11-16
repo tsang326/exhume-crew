@@ -532,6 +532,9 @@ function conversionFor(path) {
       return "dBase -> CSV";
     case "PCX":
       return "PCX -> PNG";
+    case "WK1":
+    case "WKS":
+      return "Lotus 1-2-3 -> CSV";
     case "TXT":
     case "BAT":
     case "ASC":
@@ -540,6 +543,12 @@ function conversionFor(path) {
     case "DIZ":
     case "1ST":
     case "ME":
+    case "PRG":
+    case "FMT":
+    case "QBE":
+    case "FRG":
+    case "LBG":
+    case "UPD":
       return "text";
     default:
       return null;
@@ -923,6 +932,9 @@ function LibraryView({ api, onOpenDisk, onSummarise, mode = "dark" }) {
 // ui/src/DiskView.tsx
 import { Fragment as Fragment2, jsx as jsx4, jsxs as jsxs4 } from "react/jsx-runtime";
 var EXHUME_ALL_TOOLTIP = "Exhumes live files and deleted entries graded recovered.";
+function isOriginalCopy(outputPath) {
+  return outputPath.toLowerCase().endsWith(".bin");
+}
 function relativeOutput(outputPath) {
   const norm = outputPath.replace(/\\/g, "/");
   if (norm.startsWith("exhumed/")) return norm;
@@ -1119,7 +1131,7 @@ function DiskView({ api, diskId, onBack, onAskUndertaker }) {
     ] }),
     exhume.phase === "error" ? /* @__PURE__ */ jsx4("p", { role: "alert", className: "ec-error", "data-testid": "exhume-error", children: "The exhume request failed." }) : null,
     exhume.phase === "done" ? /* @__PURE__ */ jsxs4("div", { children: [
-      /* @__PURE__ */ jsx4("ul", { "aria-label": "Exhume results", "data-testid": "exhume-results", children: exhume.results.map((r, i) => /* @__PURE__ */ jsx4("li", { "data-outcome": r.outcome, children: r.outcome === "exhumed" && r.outputPath !== void 0 ? `${nameFor(r)} -> ${relativeOutput(r.outputPath)}` : r.outcome === "exhumed" ? `${nameFor(r)}: succeeded` : `${nameFor(r)}: failed${r.errorCode !== void 0 ? ` (${r.errorCode})` : ""}` }, `${r.entry}-${i}`)) }),
+      /* @__PURE__ */ jsx4("ul", { "aria-label": "Exhume results", "data-testid": "exhume-results", children: exhume.results.map((r, i) => /* @__PURE__ */ jsx4("li", { "data-outcome": r.outcome, children: r.outcome === "exhumed" && r.outputPath !== void 0 ? `${nameFor(r)} -> ${relativeOutput(r.outputPath)}${isOriginalCopy(r.outputPath) ? " (original bytes)" : ""}` : r.outcome === "exhumed" ? `${nameFor(r)}: succeeded` : `${nameFor(r)}: failed${r.errorCode !== void 0 ? ` (${r.errorCode})` : ""}` }, `${r.entry}-${i}`)) }),
       /* @__PURE__ */ jsx4("p", { className: "ec-muted", "data-testid": "exhume-location", children: libraryPath !== null ? `Exhumed files are in ${libraryPath.replace(/[\\/]+$/, "")}/exhumed/` : "Exhumed files are in the library's exhumed/ folder." })
     ] }) : null,
     /* @__PURE__ */ jsxs4("div", { className: "ec-disk-grid", "data-testid": "disk-grid", children: [
@@ -1270,8 +1282,8 @@ var STYLE_TEXT = `
 .ec-decor svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .ec-light { position: absolute; inset: 0; z-index: 2; overflow: hidden; pointer-events: none; }
 .ec-light-a, .ec-light-b { position: absolute; inset: 0; }
-.ec-light-a { mix-blend-mode: color-dodge; background: radial-gradient(circle at var(--ec-lx, calc(100% - 48px)) var(--ec-ly, 56px), rgba(255,214,140,.70) 0, rgba(255,196,110,.36) 90px, rgba(255,170,80,.14) 330px, rgba(255,150,60,.05) 620px, rgba(255,150,60,0) 900px); }
-.ec-light-b { mix-blend-mode: screen; background: radial-gradient(circle at var(--ec-lx, calc(100% - 48px)) var(--ec-ly, 56px), rgba(255,170,70,.16) 0, rgba(255,170,70,0) 700px); }
+.ec-light-a { mix-blend-mode: color-dodge; background: radial-gradient(circle at var(--ec-lx, calc(100% - 48px)) var(--ec-ly, 56px), rgba(255,214,140,.45) 0, rgba(255,196,110,.20) 56px, rgba(255,170,80,.06) 170px, rgba(255,150,60,0) 300px); }
+.ec-light-b { mix-blend-mode: screen; background: radial-gradient(circle at var(--ec-lx, calc(100% - 48px)) var(--ec-ly, 56px), rgba(255,170,70,.10) 0, rgba(255,170,70,0) 240px); }
 .ec-root[data-light="off"] .ec-light { display: none; }
 .ec-daylight { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(circle farthest-corner at 0 0, rgba(255,240,205,.55) 0, rgba(255,240,205,.18) 35%, rgba(255,240,205,0) 65%), linear-gradient(135deg, rgba(30,41,59,0) 45%, rgba(30,41,59,.06) 100%); }
 .ec-root[data-mode="light"] .ec-card, .ec-root[data-mode="light"] .ec-preview { box-shadow: 4px 6px 14px rgba(30,41,59,.20), 1px 2px 3px rgba(30,41,59,.10); }
